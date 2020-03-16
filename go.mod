@@ -1,3 +1,3 @@
-module github.com/PagerDuty/pagerduty-agent.git
+module github.com/PagerDuty/pagerduty-agent
 
 go 1.13
