@@ -9,40 +9,38 @@ import (
 	"net/http"
 )
 
-// UnrecognizedEventType occurs when an event isn't supported by the events
+// ErrUnrecognizedEventType occurs when an event isn't supported by the events
 // API.
 var ErrUnrecognizedEventType = errors.New("unrecognized event type")
 
 // enqueueEvent handles common operations around encoding, sending, then
 // receiving and decoding from both the V1 and V2 events APIs.
-func enqueueEvent(context context.Context, client *http.Client, url string, event interface{}, response interface{}) error {
+func enqueueEvent(context context.Context, client *http.Client, url string, event interface{}, response interface{}) (*http.Response, error) {
 	body, err := json.Marshal(event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.WithContext(context)
 
-	resp, err := client.Do(req)
+	httpResp, err := client.Do(req)
 	if err != nil {
-		return err
+		return httpResp, err
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		return err
+		return httpResp, err
 	}
 
-	if err = json.Unmarshal(respBody, &response); err != nil {
-		return err
-	}
+	_ = json.Unmarshal(respBody, &response)
 
-	return nil
+	return httpResp, nil
 }
 
 // Enqueue an event to either the V1 or V2 events API depending on event type.

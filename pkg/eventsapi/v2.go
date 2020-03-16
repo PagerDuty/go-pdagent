@@ -48,16 +48,21 @@ type ResponseV2 struct {
 	Message  string   `json:"message,omitempty"`
 	DedupKey string   `json:"dedupkey,omitempty"`
 	Errors   []string `json:"errors,omitempty"`
+
+	// Not part of the response payload itself, but included for error handling.
+	StatusCode int
 }
 
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event EventV2) (*ResponseV2, error) {
 	response := new(ResponseV2)
 
-	err := enqueueEvent(context, client, endpointV2, event, &response)
+	httpResp, err := enqueueEvent(context, client, endpointV2, event, &response)
 	if err != nil {
 		return nil, err
 	}
+
+	response.StatusCode = httpResp.StatusCode
 
 	return response, nil
 }

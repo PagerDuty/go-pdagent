@@ -40,16 +40,21 @@ type ResponseV1 struct {
 	Message     string   `json:"message"`
 	IncidentKey string   `json:"incident_key"`
 	Errors      []string `json:"errors"`
+
+	// Not part of the response payload itself, but included for error handling.
+	StatusCode int
 }
 
 // CreateV1 sends an event to explicitly the Events API V1.
 func CreateV1(context context.Context, client *http.Client, event EventV1) (*ResponseV1, error) {
 	response := new(ResponseV1)
 
-	err := enqueueEvent(context, client, endpointV1, event, &response)
+	httpResp, err := enqueueEvent(context, client, endpointV1, event, &response)
 	if err != nil {
 		return nil, err
 	}
+
+	response.StatusCode = httpResp.StatusCode
 
 	return response, nil
 }
