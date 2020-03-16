@@ -11,7 +11,7 @@ import (
 
 // UnrecognizedEventType occurs when an event isn't supported by the events
 // API.
-const UnrecognizedEventType = errors.New("unrecognized event type")
+var ErrUnrecognizedEventType = errors.New("unrecognized event type")
 
 // enqueueEvent handles common operations around encoding, sending, then
 // receiving and decoding from both the V1 and V2 events APIs.
@@ -20,8 +20,6 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	if err != nil {
 		return err
 	}
-
-	json.NewDecoder()
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
@@ -55,6 +53,6 @@ func Enqueue(context context.Context, client *http.Client, event interface{}) (i
 	case EventV2:
 		return EnqueueV2(context, client, e)
 	default:
-		return nil, UnrecognizedEventType
+		return nil, ErrUnrecognizedEventType
 	}
 }
