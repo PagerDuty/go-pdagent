@@ -24,28 +24,26 @@ import (
 // sendCmd represents the send command
 var sendCmd = &cobra.Command{
 	Use:   "send",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
+	Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
+	Long: `TODO: A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("send called")
+		fmt.Println("send called", cmd.Flag("routing-key").Value)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(sendCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// sendCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// sendCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	sendCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API Key")
+	sendCmd.PersistentFlags().StringP("event-type", "t", "", "Event type")
+	sendCmd.PersistentFlags().StringP("description", "d", "", "Short description of the problem")
+	sendCmd.PersistentFlags().StringP("incident-key", "i", "", "Incident Key")
+	sendCmd.PersistentFlags().StringP("client", "c", "", "Client")
+	sendCmd.PersistentFlags().StringP("client-url", "c", "", "Client URL")
+	sendCmd.PersistentFlags().StringP("field", "f", "", "Add given KEY=VALUE pair to the event details")
 }
