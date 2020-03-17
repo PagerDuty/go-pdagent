@@ -13,34 +13,19 @@ import (
 // API.
 var ErrUnrecognizedEventType = errors.New("unrecognized event type")
 
-// enqueueEvent handles common operations around encoding, sending, then
-// receiving and decoding from both the V1 and V2 events APIs.
-func enqueueEvent(context context.Context, client *http.Client, url string, event interface{}, response interface{}) (*http.Response, error) {
-	body, err := json.Marshal(event)
-	if err != nil {
-		return nil, err
-	}
+// Response defines a minimal interface for the events APIs' HTTP responses.
+type Response interface {
+	SetHTTPResponse(*http.Response)
+}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
+// BaseResponse is a minimal implementation of the `Response` interface.
+type BaseResponse struct {
+	HTTPResponse *http.Response
+}
 
-	req.WithContext(context)
-
-	httpResp, err := client.Do(req)
-	if err != nil {
-		return httpResp, err
-	}
-
-	respBody, err := ioutil.ReadAll(httpResp.Body)
-	if err != nil {
-		return httpResp, err
-	}
-
-	_ = json.Unmarshal(respBody, &response)
-
-	return httpResp, nil
+// SetHTTPResponse sets `HTTPResponse` on a response.
+func (br *BaseResponse) SetHTTPResponse(resp *http.Response) {
+	br.HTTPResponse = resp
 }
 
 // Enqueue an event to either the V1 or V2 events API depending on event type.
@@ -53,4 +38,35 @@ func Enqueue(context context.Context, client *http.Client, event interface{}) (i
 	default:
 		return nil, ErrUnrecognizedEventType
 	}
+}
+
+// enqueueEvent handles common operations around encoding, sending, then
+// receiving and decoding from both the V1 and V2 events APIs.
+func enqueueEvent(context context.Context, client *http.Client, url string, event interface{}, response Response) error {
+	body, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	req.WithContext(context)
+
+	httpResp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	response.SetHTTPResponse(httpResp)
+
+	respBody, err := ioutil.ReadAll(httpResp.Body)
+	if err != nil {
+		return err
+	}
+
+	_ = json.Unmarshal(respBody, &response)
+
+	return nil
 }

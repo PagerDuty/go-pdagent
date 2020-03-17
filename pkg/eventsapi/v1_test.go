@@ -109,7 +109,7 @@ func TestCreateV1TooManyRequests(t *testing.T) {
 		return
 	}
 
-	if resp.StatusCode != 429 {
+	if resp.HTTPResponse.StatusCode != 429 {
 		t.Errorf("Expected status code to be 429, was %v", resp.Status)
 	}
 }

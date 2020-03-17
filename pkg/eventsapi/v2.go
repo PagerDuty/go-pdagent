@@ -44,25 +44,17 @@ type LinkV2 struct {
 
 // ResponseV2 corresponds to a V2 response object.
 type ResponseV2 struct {
+	BaseResponse
+
 	Status   string   `json:"status,omitempty"`
 	Message  string   `json:"message,omitempty"`
 	DedupKey string   `json:"dedupkey,omitempty"`
 	Errors   []string `json:"errors,omitempty"`
-
-	// Not part of the response payload itself, but included for error handling.
-	StatusCode int
 }
 
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event EventV2) (*ResponseV2, error) {
 	response := new(ResponseV2)
-
-	httpResp, err := enqueueEvent(context, client, endpointV2, event, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	response.StatusCode = httpResp.StatusCode
-
-	return response, nil
+	err := enqueueEvent(context, client, endpointV2, event, response)
+	return response, err
 }

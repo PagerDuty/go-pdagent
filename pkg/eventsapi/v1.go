@@ -36,25 +36,20 @@ type ContextV1 struct {
 
 // ResponseV1 corresponds to a V1 response.
 type ResponseV1 struct {
-	Status      string   `json:"status"`
-	Message     string   `json:"message"`
-	IncidentKey string   `json:"incident_key"`
-	Errors      []string `json:"errors"`
+	BaseResponse
 
-	// Not part of the response payload itself, but included for error handling.
-	StatusCode int
+	Status      string   `json:"status,omitempty"`
+	Message     string   `json:"message,omitempty"`
+	IncidentKey string   `json:"incident_key,omitempty"`
+	Errors      []string `json:"errors,omitempty"`
 }
 
 // CreateV1 sends an event to explicitly the Events API V1.
+//
+// Keeping the `create` semantics versus `enqueue` to more closely match the
+// service's own.
 func CreateV1(context context.Context, client *http.Client, event EventV1) (*ResponseV1, error) {
 	response := new(ResponseV1)
-
-	httpResp, err := enqueueEvent(context, client, endpointV1, event, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	response.StatusCode = httpResp.StatusCode
-
-	return response, nil
+	err := enqueueEvent(context, client, endpointV1, event, response)
+	return response, err
 }
