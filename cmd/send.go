@@ -44,6 +44,6 @@ func init() {
 	sendCmd.PersistentFlags().StringP("description", "d", "", "Short description of the problem")
 	sendCmd.PersistentFlags().StringP("incident-key", "i", "", "Incident Key")
 	sendCmd.PersistentFlags().StringP("client", "c", "", "Client")
-	sendCmd.PersistentFlags().StringP("client-url", "c", "", "Client URL")
+	sendCmd.PersistentFlags().StringP("client-url", "u", "", "Client URL")
 	sendCmd.PersistentFlags().StringP("field", "f", "", "Add given KEY=VALUE pair to the event details")
 }

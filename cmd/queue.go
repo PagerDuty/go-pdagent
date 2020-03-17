@@ -39,5 +39,5 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(queueCmd)
 
-	sendCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API routing key")
+	queueCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API routing key")
 }
