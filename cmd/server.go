@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"../pkg/server/server.go"
 )
 
 // serverCmd represents the server command
@@ -33,6 +34,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server called")
+		server.Start()
 	},
 }
 
