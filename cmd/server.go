@@ -18,8 +18,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/PagerDuty/pagerduty-agent/pkg/server"
 	"github.com/spf13/cobra"
-	"../pkg/server/server.go"
 )
 
 // serverCmd represents the server command
