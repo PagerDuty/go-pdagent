@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/PagerDuty/pagerduty-agent/cmd"
+import (
+	"github.com/PagerDuty/pagerduty-agent/cmd"
+)
 
 func main() {
 	cmd.Execute()

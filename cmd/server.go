@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 PagerDuty, Inc. <info@pagerduty.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,37 +17,44 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/PagerDuty/pagerduty-agent/pkg/server"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"os"
+	"path"
 )
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Start the server daemon.",
+	Long:  `Starts the daemon server and begins processing any event backlog.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("server called")
-		server.Start()
+		address := viper.GetString("address")
+		secret := viper.GetString("secret")
+		database := viper.GetString("database")
+
+		server := server.NewServer(address, secret, database)
+		err := server.Start()
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	// Here you will define your flags and configuration settings.
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serverCmd.PersistentFlags().String("foo", "", "A help for foo")
+	serverCmd.PersistentFlags().String("database", path.Join(home, ".pagerduty-agent.db"), "database file for event queuing (default is $HOME/.pagerduty-agent.db)")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.BindPFlag("database", serverCmd.PersistentFlags().Lookup("database"))
+	viper.SetDefault("database", path.Join(home, ".pagerduty-agent.db"))
+
 }

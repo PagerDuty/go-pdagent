@@ -8,18 +8,6 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-func mockEndpointV2(statusCode int, response interface{}) *gock.Response {
-	mock := gock.New("https://events.pagerduty.com").
-		Post("/v2/enqueue").
-		Reply(statusCode)
-
-	if response != nil {
-		mock = mock.JSON(response)
-	}
-
-	return mock
-}
-
 func TestEnqueueV2Success(t *testing.T) {
 	defer gock.Off()
 
@@ -41,7 +29,7 @@ func TestEnqueueV2Success(t *testing.T) {
 		},
 	}
 
-	resp, err := EnqueueV2(context.Background(), http.DefaultClient, event)
+	resp, err := EnqueueV2(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return
@@ -81,7 +69,7 @@ func TestEnqueueV2InvalidEvent(t *testing.T) {
 		},
 	}
 
-	resp, err := EnqueueV2(context.Background(), http.DefaultClient, event)
+	resp, err := EnqueueV2(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return
@@ -115,7 +103,7 @@ func TestEnqueueV2TooManyRequests(t *testing.T) {
 		},
 	}
 
-	resp, err := EnqueueV2(context.Background(), http.DefaultClient, event)
+	resp, err := EnqueueV2(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return

@@ -17,11 +17,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"os"
-
+	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var cfgFile string
@@ -29,16 +29,15 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "pagerduty-agent",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "PagerDuty Agent CLI",
+	Long: `A PagerDuty Agent and corresponding Command Line Interface.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+The agent acts as a local server between your own infrastructure and PagerDuty,
+providing command line tools to send PagerDuty events while ensuring event
+ordering and mitigating backpressure.
+
+On first run it's recommended you run "init" to generate a default
+configuration, then run "server" to start the agent itself.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -52,16 +51,16 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	pflags := rootCmd.PersistentFlags()
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pagerduty-agent.yaml)")
+	pflags.StringP("address", "a", "127.0.0.1:49463", "address to run and access the agent server on.")
+	pflags.StringP("secret", "s", "undefined", "secret used to authorize agent access.")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pagerduty-agent.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.BindPFlag("address", pflags.Lookup("address"))
+	viper.BindPFlag("secret", pflags.Lookup("secret"))
+	viper.SetDefault("address", "localhost:49463")
+	viper.SetDefault("secret", common.GenerateKey())
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -85,7 +84,5 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	_ = viper.ReadInConfig()
 }
