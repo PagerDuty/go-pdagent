@@ -3,11 +3,11 @@ before:
     - go mod download
     - go generate ./...
 builds:
-- env:
+- binary: pdagent
+  env:
   - CGO_ENABLED=0
   ldflags:
   - -s -w -X common.Version={{.Version}} -X common.Commit={{.ShortCommit}} -X common.Date={{.Date}}
-
 archives:
 - replacements:
     darwin: Darwin
@@ -17,6 +17,8 @@ archives:
     amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
+signs:
+- artifacts: all
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
@@ -25,3 +27,19 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+nfpms:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+    386: i386
+    amd64: x86_64
+  vendor: PagerDuty Inc.
+  homepage: https://www.pagerduty.com/
+  maintainer: PagerDuty, Inc. <info@pagerduty.com>
+  description: PagerDuty's agent daemon.
+  license: Apache 2.0
+  formats:
+    - deb
+    - rpm
+  # TODO: Pre/post scripts migrated from previous agent.

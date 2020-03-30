@@ -49,6 +49,31 @@ pagerduty-agent send \
   -f some_field=some_value
 ```
 
+## Releasing
+
+For local builds and releases, install GoReleaser: https://goreleaser.com/
+
+Builds are signed with GPG. To test your configuration, run the following:
+
+```
+gpg --list-secret
+```
+
+If nothing was output, run the following (for our purposes we recommend leaving the passphrase blank):
+
+```
+gpg --full-generate-key
+```
+
+Once GPG is set up, there are two commands for building:
+
+```bash
+make release # Regular distributable release, with publishing.
+make release-test # To build a local snapshot release without publishing.
+```
+
+**Additional publishing details TBD during migration.**
+
 ## Architecture
 
 At a high level, the agent has three key components:
