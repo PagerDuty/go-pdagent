@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	"io/ioutil"
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 )
 
 var ErrInvalidRoutingKey = errors.New("invalid routing key")
@@ -168,9 +169,10 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 func userAgent() string {
 	version := common.Version
 	system := runtime.GOOS
-	commit := common.GitCommit
+	commit := common.Commit
+	date := common.Date
 
-	return fmt.Sprintf("pagerduty-agent/%v (%v, commit: %v)", version, system, commit)
+	return fmt.Sprintf("pagerduty-agent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
 }
 
 func validateRoutingKey(routingKey string) error {
