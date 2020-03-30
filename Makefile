@@ -19,7 +19,7 @@ release: format test
 
 .PHONY: release-test
 release-test: format test
-	goreleaser --snapshot --skip-publish
+	goreleaser --snapshot --skip-publish --rm-dist
 
 clean:
 	rm -rf dist
