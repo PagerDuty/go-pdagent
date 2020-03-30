@@ -1,4 +1,4 @@
-build: test pagerduty-agent
+build: pagerduty-agent
 
 GIT_COMMIT = $(shell git rev-list -1 HEAD)
 
