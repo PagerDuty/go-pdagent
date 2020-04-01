@@ -1,9 +1,9 @@
-build: pagerduty-agent
+build: pdagent
 
 GIT_COMMIT = $(shell git rev-list -1 HEAD)
 
-pagerduty-agent: format test
-	go build -ldflags "-s -w -X common.Commit=$(GIT_COMMIT)" .
+pdagent: test
+	go build -o pdagent -ldflags "-s -w -X common.Commit=$(GIT_COMMIT)" .
 
 .PHONY: format
 format:
@@ -23,4 +23,5 @@ release-test: format test
 
 clean:
 	rm -rf dist
+	rm -f pdagent
 	rm -f pagerduty-agent

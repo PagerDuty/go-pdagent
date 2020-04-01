@@ -3,9 +3,12 @@ module github.com/PagerDuty/pagerduty-agent
 go 1.13
 
 require (
+	github.com/DataDog/zstd v1.4.4 // indirect
+	github.com/Sereal/Sereal v0.0.0-20200326150110-2c0ed69a855f // indirect
 	github.com/asdine/storm v2.1.2+incompatible
-	github.com/boltdb/bolt v1.3.1
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pelletier/go-toml v1.6.0 // indirect
@@ -15,7 +18,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.2
-	go.etcd.io/bbolt v1.3.4
+	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
+	go.etcd.io/bbolt v1.3.4 // indirect
 	go.uber.org/zap v1.14.1
 	golang.org/x/sys v0.0.0-20200317113312-5766fd39f98d // indirect
 	golang.org/x/text v0.3.2 // indirect

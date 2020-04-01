@@ -17,18 +17,19 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 )
 
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "pagerduty-agent",
+	Use:   "pdagent",
 	Short: "PagerDuty Agent CLI",
 	Long: `A PagerDuty Agent and corresponding Command Line Interface.
 

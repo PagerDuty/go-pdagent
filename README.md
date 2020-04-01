@@ -19,28 +19,28 @@ For the time being:
 - Clone the project: https://github.com/PagerDuty/pagerduty-agent
 - Run `make build`
 
-You should now have a working `pagerduty-agent` binary.
+You should now have a working `pdagent` binary.
 
 ## Usage
 
-On first run we recommend running `pagerduty-agent init` to generate a default config file. By default this is created as `~/.pagerduty-agent.yaml` and includes options such as which address to run the server on, the client/server secret, and where the database should live.
+On first run we recommend running `pdagent init` to generate a default config file. By default this is created as `~/.pagerduty-agent.yaml` and includes options such as which address to run the server on, the client/server secret, and where the database should live.
 
 Once the config has been created, to start the daemon:
 
 ```
-pagerduty-agent server
+pdagent server
 ```
 
 There are a number of other commands available that are listed as part of the command's help command:
 
 ```
-pagerduty-agent help
+pdagent help
 ```
 
 Perhaps the most common command, sending events:
 
 ```
-pagerduty-agent send \
+pdagent send \
   -k v4g5q7yie1qee1yio2uimz8yfbjenvj9 \
   -t trigger \
   -d "This is a test event" \
