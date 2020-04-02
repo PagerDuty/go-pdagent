@@ -1,10 +1,10 @@
 package persistentqueue
 
 type StatusItem struct {
-	RoutingKey string
-	Pending    int
-	Success    int
-	Error      int
+	RoutingKey string `json:"routing_key"`
+	Pending    int    `json:"pending"`
+	Success    int    `json:"success"`
+	Error      int    `json:"error"`
 }
 
 // Returns aggregate stats per routing key for pending and enqueued events.
