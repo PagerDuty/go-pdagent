@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/PagerDuty/pagerduty-agent/pkg/common"
+	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
 	"go.uber.org/zap"
 	"net/http"
@@ -11,35 +12,40 @@ import (
 	"time"
 )
 
+type Queue interface {
+	Enqueue(eventsapi.Event) (string, error)
+	Retry(string) (int, error)
+	Shutdown() error
+	Start() error
+	Status(string) ([]persistentqueue.StatusItem, error)
+}
+
 type Server struct {
 	HTTPServer *http.Server
-	Queue      *persistentqueue.PersistentQueue
+	Queue      Queue
 
-	database string
-	secret   string
-	logger   *zap.SugaredLogger
+	secret string
+	logger *zap.SugaredLogger
 }
 
 type Option func(*Server)
 
-func NewServer(address, secret, database string) *Server {
+func NewServer(address, secret string, queue Queue) *Server {
 	logger := common.Logger.Named("Server")
 
 	server := Server{
-		database: database,
-		secret:   secret,
-		logger:   logger,
+		HTTPServer: &http.Server{
+			Addr:           address,
+			ReadTimeout:    10 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		},
+		Queue:  queue,
+		secret: secret,
+		logger: logger,
 	}
 
-	handler := Router(&server)
-
-	server.HTTPServer = &http.Server{
-		Addr:           address,
-		Handler:        handler,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
+	server.HTTPServer.Handler = Router(&server)
 
 	return &server
 }
@@ -47,16 +53,14 @@ func NewServer(address, secret, database string) *Server {
 func (s *Server) Start() error {
 	s.logger.Infof("Server starting at %v", s.HTTPServer.Addr)
 
+	if err := s.Queue.Start(); err != nil {
+		s.logger.Error("Failed to start server's queue.")
+		return err
+	}
+
 	go func() {
 		s.logger.Info(s.HTTPServer.ListenAndServe())
 	}()
-
-	queue, err := persistentqueue.NewPersistentQueue(s.database)
-	if err != nil {
-		s.logger.Error(err)
-		return err
-	}
-	s.Queue = queue
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
@@ -68,7 +72,10 @@ func (s *Server) Start() error {
 		s.logger.Error(err)
 	}
 
-	queue.Shutdown()
+	if err := s.Queue.Shutdown(); err != nil {
+		s.logger.Error("Error shutting down server's queue.")
+		return err
+	}
 
 	os.Exit(0)
 	return nil

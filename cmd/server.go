@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
 	"github.com/PagerDuty/pagerduty-agent/pkg/server"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -35,7 +36,9 @@ var serverCmd = &cobra.Command{
 		secret := viper.GetString("secret")
 		database := viper.GetString("database")
 
-		server := server.NewServer(address, secret, database)
+		queue := persistentqueue.NewPersistentQueue(persistentqueue.WithFile(database))
+
+		server := server.NewServer(address, secret, queue)
 		err := server.Start()
 		if err != nil {
 			fmt.Println(err)

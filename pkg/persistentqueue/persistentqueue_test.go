@@ -12,9 +12,11 @@ func TestPersistentQueueSimple(t *testing.T) {
 
 	eq := NewMockEventQueue()
 
-	q, err := NewPersistentQueue(tmpDbFile, WithEventQueue(eq))
+	q := NewPersistentQueue(WithEventQueue(eq))
+
+	err := q.Start()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Error starting persistent queue.")
 	}
 
 	event := eventsapi.EventV2{

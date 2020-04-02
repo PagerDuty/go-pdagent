@@ -6,12 +6,14 @@ import (
 	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"github.com/asdine/storm"
 	"go.uber.org/zap"
+	"io/ioutil"
+	"os"
 	"sync"
 )
 
 type EventQueue interface {
-	Shutdown()
 	Enqueue(eventsapi.Event, chan<- eventqueue.Response) error
+	Shutdown()
 }
 
 type PersistentQueue struct {
@@ -19,45 +21,55 @@ type PersistentQueue struct {
 	Events     storm.Node
 	EventQueue EventQueue
 
+	path   string
 	logger *zap.SugaredLogger
+	tmp    bool
 	wg     sync.WaitGroup
 }
 
 type Option func(*PersistentQueue)
 
-func WithEventQueue(eq EventQueue) Option {
-	return func(pq *PersistentQueue) {
-		pq.EventQueue = eq
+func WithFile(path string) Option {
+	return func(q *PersistentQueue) {
+		q.path = path
+		q.tmp = false
 	}
 }
 
-func NewPersistentQueue(path string, options ...Option) (*PersistentQueue, error) {
+func WithEventQueue(eq EventQueue) Option {
+	return func(q *PersistentQueue) {
+		q.EventQueue = eq
+	}
+}
+
+func NewPersistentQueue(options ...Option) *PersistentQueue {
 	logger := common.Logger.Named("PersistentQueue")
 	logger.Info("Creating new PersistentQueue.")
 
 	q := PersistentQueue{
-		logger: logger,
+		EventQueue: eventqueue.NewEventQueue(),
+		logger:     logger,
+		tmp:        true,
 	}
 
 	for _, option := range options {
 		option(&q)
 	}
 
-	if q.EventQueue == nil {
-		q.EventQueue = eventqueue.NewEventQueue()
-	}
-
-	err := q.Start(path)
-	if err != nil {
-		logger.Error("Error starting PersistentQueue: ", err)
-		return nil, err
-	}
-
-	return &q, nil
+	return &q
 }
 
-func (q *PersistentQueue) Start(path string) error {
-	db, err := storm.Open(path)
+func (q *PersistentQueue) Start() error {
+	if q.tmp {
+		dbFile, err := ioutil.TempFile("", "pagerduty-agent.*.db")
+		if err != nil {
+			return err
+		}
+		q.path = dbFile.Name()
+		dbFile.Close()
+	}
+
+	db, err := storm.Open(q.path)
 	if err != nil {
 		return err
 	}
@@ -82,11 +94,17 @@ func (q *PersistentQueue) Start(path string) error {
 // Stop a `PersistentQueue`, performing any necessary cleanup.
 func (q *PersistentQueue) Shutdown() error {
 	q.logger.Info("Shutting down PersistentQueue.")
+
 	q.EventQueue.Shutdown()
 	q.wg.Wait()
 	if err := q.DB.Close(); err != nil {
 		return err
 	}
+
+	if q.tmp {
+		os.Remove(q.path)
+	}
+
 	q.logger.Info("Shut down PersistentQueue.")
 	return nil
 }
