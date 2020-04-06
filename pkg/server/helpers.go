@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -9,7 +10,7 @@ func okResp(rw http.ResponseWriter, resp interface{}) {
 	body, err := json.Marshal(resp)
 	if err != nil {
 		rw.WriteHeader(500)
-		rw.Write([]byte(err.Error()))
+		_, _ = fmt.Fprintf(rw, err.Error())
 		return
 	}
 
@@ -25,7 +26,7 @@ func errorResp(rw http.ResponseWriter, code int, errs []string) {
 	body, err := json.Marshal(ErrorResponse{errs})
 	if err != nil {
 		rw.WriteHeader(500)
-		rw.Write([]byte(err.Error()))
+		_, _ = fmt.Fprintf(rw, err.Error())
 		return
 	}
 
