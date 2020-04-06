@@ -19,6 +19,18 @@ type EventV1 struct {
 	Contexts    []ContextV1 `json:"contexts,omitempty"`
 }
 
+func (e EventV1) GetRoutingKey() string {
+	return e.ServiceKey
+}
+
+func (e EventV1) Validate() error {
+	if err := validateRoutingKey(e.ServiceKey); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DetailsV1 corresponds to a V1 details object.
 type DetailsV1 map[string]interface{}
 
@@ -44,12 +56,16 @@ type ResponseV1 struct {
 	Errors      []string `json:"errors,omitempty"`
 }
 
+func (r *ResponseV1) IsSuccess() bool {
+	return r.Status == "success" || r.BaseResponse.IsSuccess()
+}
+
 // CreateV1 sends an event to explicitly the Events API V1.
 //
 // Keeping the `create` semantics versus `enqueue` to more closely match the
 // service's own.
-func CreateV1(context context.Context, client *http.Client, event EventV1) (*ResponseV1, error) {
-	response := new(ResponseV1)
-	err := enqueueEvent(context, client, endpointV1, event, response)
-	return response, err
+func CreateV1(context context.Context, client *http.Client, event *EventV1) (*ResponseV1, error) {
+	var response ResponseV1
+	err := enqueueEvent(context, client, endpointV1, event, &response)
+	return &response, err
 }

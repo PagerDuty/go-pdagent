@@ -8,18 +8,6 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-func mockEndpointV1(statusCode int, response interface{}) *gock.Response {
-	mock := gock.New("https://events.pagerduty.com").
-		Post("/generic/2010-04-15/create_event.json").
-		Reply(statusCode)
-
-	if response != nil {
-		mock = mock.JSON(response)
-	}
-
-	return mock
-}
-
 func TestCreateV1Success(t *testing.T) {
 	defer gock.Off()
 
@@ -37,7 +25,7 @@ func TestCreateV1Success(t *testing.T) {
 		Description: "PagerDuty Agent `CreateV1` Test",
 	}
 
-	resp, err := CreateV1(context.Background(), http.DefaultClient, event)
+	resp, err := CreateV1(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return
@@ -73,7 +61,7 @@ func TestCreateV1InvalidEvent(t *testing.T) {
 		Description: "PagerDuty Agent `CreateV1` Test",
 	}
 
-	resp, err := CreateV1(context.Background(), http.DefaultClient, event)
+	resp, err := CreateV1(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return
@@ -103,7 +91,7 @@ func TestCreateV1TooManyRequests(t *testing.T) {
 		Description: "PagerDuty Agent `CreateV1` Test",
 	}
 
-	resp, err := CreateV1(context.Background(), http.DefaultClient, event)
+	resp, err := CreateV1(context.Background(), http.DefaultClient, &event)
 	if err != nil {
 		t.Error("Unexpected error during event creation", err)
 		return

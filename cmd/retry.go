@@ -16,17 +16,42 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+	"github.com/PagerDuty/pagerduty-agent/pkg/client"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"os"
 )
 
 // queueCmd represents the storage command
-var queueCmd = &cobra.Command{
-	Use:   "queue",
-	Short: "Access the daemon's event queue.",
+var retryCmd = &cobra.Command{
+	Use:   "retry",
+	Short: "Retry failed events.",
+	Run: func(cmd *cobra.Command, args []string) {
+		c := client.NewClient(viper.GetString("address"), viper.GetString("secret"))
+		rk, err := cmd.Flags().GetString("routing-key")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		resp, err := c.QueueRetry(rk)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		fmt.Println(string(respBody))
+	},
 }
 
 func init() {
-	rootCmd.AddCommand(queueCmd)
-
-	queueCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API routing key")
+	queueCmd.AddCommand(retryCmd)
 }

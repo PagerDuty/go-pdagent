@@ -17,33 +17,60 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/PagerDuty/pagerduty-agent/pkg/client"
+	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"os"
 )
+
+var customDetails map[string]string
+
+var sendEvent = eventsapi.EventV2{
+	Payload: eventsapi.PayloadV2{
+		// TODO Support as CLI option.
+		Severity: "error",
+	},
+}
 
 // sendCmd represents the send command
 var sendCmd = &cobra.Command{
 	Use:   "send",
 	Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
-	Long: `TODO: A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("send called", cmd.Flag("routing-key").Value)
+		c := client.NewClient(viper.GetString("address"), viper.GetString("secret"))
+
+		// Manually mapping as a workaround for the map type mismatch.
+		sendEvent.Payload.CustomDetails = map[string]interface{}{}
+		for k, v := range customDetails {
+			sendEvent.Payload.CustomDetails[k] = v
+		}
+
+		resp, err := c.Send(sendEvent)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		fmt.Println(string(respBody))
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(sendCmd)
 
-	sendCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API Key")
-	sendCmd.PersistentFlags().StringP("event-type", "t", "", "Event type")
-	sendCmd.PersistentFlags().StringP("description", "d", "", "Short description of the problem")
-	sendCmd.PersistentFlags().StringP("incident-key", "i", "", "Incident Key")
-	sendCmd.PersistentFlags().StringP("client", "c", "", "Client")
-	sendCmd.PersistentFlags().StringP("client-url", "u", "", "Client URL")
-	sendCmd.PersistentFlags().StringP("field", "f", "", "Add given KEY=VALUE pair to the event details")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.EventAction, "event-type", "t", "", "Event type")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.Payload.Summary, "description", "d", "", "Short description of the problem")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.DedupKey, "incident-key", "i", "", "Incident Key")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.Payload.Component, "client", "c", "", "Client")
+	sendCmd.PersistentFlags().StringVarP(&sendEvent.Payload.Source, "client-url", "u", "", "Client URL")
+	sendCmd.PersistentFlags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 }

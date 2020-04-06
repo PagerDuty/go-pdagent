@@ -17,6 +17,18 @@ type EventV2 struct {
 	Links       []LinkV2  `json:"links,omitempty"`
 }
 
+func (e EventV2) GetRoutingKey() string {
+	return e.RoutingKey
+}
+
+func (e EventV2) Validate() error {
+	if err := validateRoutingKey(e.RoutingKey); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // PayloadV2 corresponds to a V2 payload object.
 type PayloadV2 struct {
 	Summary       string                 `json:"summary"`
@@ -52,9 +64,13 @@ type ResponseV2 struct {
 	Errors   []string `json:"errors,omitempty"`
 }
 
+func (r *ResponseV2) IsSuccess() bool {
+	return r.Status == "success" || r.BaseResponse.IsSuccess()
+}
+
 // EnqueueV2 sends an event explicitly to the Events API V2.
-func EnqueueV2(context context.Context, client *http.Client, event EventV2) (*ResponseV2, error) {
-	response := new(ResponseV2)
-	err := enqueueEvent(context, client, endpointV2, event, response)
-	return response, err
+func EnqueueV2(context context.Context, client *http.Client, event *EventV2) (*ResponseV2, error) {
+	var response ResponseV2
+	err := enqueueEvent(context, client, endpointV2, event, &response)
+	return &response, err
 }
