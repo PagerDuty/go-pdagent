@@ -1,13 +1,13 @@
 # Pagerduty Agent
 
-An agent daemon for to aid in creating PagerDuty events.
+An agent daemon to aid in creating PagerDuty events.
 
 Goals of this project include providing:
 
 - A command-line interface for creating PagerDuty events.
 - A local entry point for PagerDuty's Events API.
 - Ensuring that events are properly ordered for each integration.
-- Handling backpressure or when PagerDuty is inaccessible.
+- Handling back pressure or when PagerDuty is inaccessible.
 
 ## Installation
 
@@ -104,11 +104,35 @@ Events are represented as "jobs" and processed by "processors," currently an eve
 
 A small helper library used for sending events to both Events API V1 and V2 endpoints. Currently this package is leveraged by `eventqueue` when processing events.
 
+## Current Status
 
-## Troubleshooting
+This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
 
-WIP
-
-## Contributing
-
-WIP
+- [ ] Events API V1 support
+- [ ] Events API V2 support.
+    - [X] Parity with existing `pd-send` functionality.
+    - [ ] Comprehensive Events API V2 payload support.
+- [ ] HTTP configuration.
+    - [ ] Custom cert files.
+    - [ ] Proxy and firewall support.
+    - [ ] Local server security.
+- [X] Event queuing.
+- [X] Persistent queuing.
+- [ ] Legacy command wrappers.
+    - [ ] `pd-send`
+    - [ ] `pd-queue`
+- [ ] Releasing
+    - [ ] Init and pre/post install scripts.
+    - [X] Github release support.
+        - [X] Source
+        - [X] Darwin
+        - [X] Linux (deb/rpm)
+        - [X] Checksums.
+        - [X] Signature files.
+    - [ ] `deb` repo support.
+    - [ ] `rpm` repo support.
+        - [ ] Signed packages.
+- [ ] `pdagent-integrations` support.
+    - [ ] `pd-nagios`
+    - [ ] `pd-sensu`
+    - [ ] `pd-zabbix`
