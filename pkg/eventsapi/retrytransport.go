@@ -3,7 +3,9 @@ package eventsapi
 import (
 	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	"go.uber.org/zap"
+	"golang.org/x/net/http2"
 	"math"
+	"net"
 	"net/http"
 	"time"
 )
@@ -29,8 +31,8 @@ type RetryTransport struct {
 	MaxRetries  int
 	Transport   http.RoundTripper
 	Backoff     func(int) time.Duration
-	IsRetryable func(*http.Response) bool
-	IsSuccess   func(*http.Response) bool
+	IsRetryable func(*http.Response, error) bool
+	IsSuccess   func(*http.Response, error) bool
 
 	log *zap.SugaredLogger
 }
@@ -57,15 +59,16 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	for tries := 0; tries < r.MaxRetries; tries++ {
 		resp, err = r.Transport.RoundTrip(req)
 
-		if r.IsSuccess(resp) || (err != nil && !r.IsRetryable(resp)) {
+		if r.IsSuccess(resp, err) {
 			r.log.Debugf("Successful or non-retryable response.")
 			return resp, err
-		} else if !r.IsRetryable(resp) {
-			// This branch might seem redundant, but a typical case would be
-			// when there's an HTTP error that doesn't result in a client
-			// error (e.g. 404).
+		} else if !r.IsRetryable(resp, err) {
+			if err == nil {
+				err = ErrAPIError
+			}
+
 			r.log.Errorf("Error encountered: %v", resp.Status)
-			return resp, ErrAPIError
+			return resp, err
 		}
 
 		backoff := r.Backoff(tries)
@@ -110,11 +113,25 @@ func calculateBackoff(try int) time.Duration {
 //
 // Per documentation this is when the there's a network failure or the response
 // status code is 429 or a 5XX.
-func isRetryable(resp *http.Response) bool {
+func isRetryable(resp *http.Response, err error) bool {
+	if err != nil {
+		switch e := err.(type) {
+		case *net.DNSError, *net.OpError:
+			return true
+		case http2.GoAwayError:
+			if e.ErrCode != http2.ErrCodeNo {
+				return true
+			}
+			// Note: If `e.ErrCode` isn't `ErrCodeNo` we intentionally fall
+			// through.
+		default:
+			return false
+		}
+	}
+
 	if resp == nil {
 		return false
 	}
-
 	return resp.StatusCode == 429 || resp.StatusCode/100 == 5
 }
 
@@ -122,8 +139,8 @@ func isRetryable(resp *http.Response) bool {
 //
 // Per documentation this is when the server responds with a 202, but we treat
 // any 2XX as a success.
-func isSuccess(resp *http.Response) bool {
-	if resp == nil {
+func isSuccess(resp *http.Response, err error) bool {
+	if err != nil || resp == nil {
 		return false
 	}
 
