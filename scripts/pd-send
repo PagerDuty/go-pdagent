@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# pd-send is a wrapper matching our legacy Python pdagent.
+
+pdagent send $@

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# pd-queue is a wrapper matching our legacy Python pdagent.
+
+pdagent queue $@
