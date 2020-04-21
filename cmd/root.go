@@ -17,9 +17,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	"os"
 
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -56,18 +56,20 @@ func init() {
 
 	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pagerduty-agent.yaml)")
 	pflags.StringP("address", "a", "127.0.0.1:49463", "address to run and access the agent server on.")
-	pflags.StringP("secret", "s", "undefined", "secret used to authorize agent access.")
+	pflags.String("pidfile", "/var/run/pdagent/pidfile", "pidfile for the currently running pdagent instance, if any.")
+	pflags.StringP("secret", "s", common.GenerateKey(), "secret used to authorize agent access.")
 
 	if err := viper.BindPFlag("address", pflags.Lookup("address")); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := viper.BindPFlag("pidfile", pflags.Lookup("pidfile")); err != nil {
 		fmt.Println(err)
 	}
 
 	if err := viper.BindPFlag("secret", pflags.Lookup("secret")); err != nil {
 		fmt.Println(err)
 	}
-
-	viper.SetDefault("address", "localhost:49463")
-	viper.SetDefault("secret", common.GenerateKey())
 }
 
 // initConfig reads in config file and ENV variables if set.

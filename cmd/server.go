@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
 	"github.com/PagerDuty/pagerduty-agent/pkg/server"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-	"path"
 )
 
 // serverCmd represents the server command
@@ -33,15 +31,17 @@ var serverCmd = &cobra.Command{
 	Long:  `Starts the daemon server and begins processing any event backlog.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		address := viper.GetString("address")
-		secret := viper.GetString("secret")
 		database := viper.GetString("database")
+		pidfile := viper.GetString("pidfile")
+		secret := viper.GetString("secret")
 
 		queue := persistentqueue.NewPersistentQueue(persistentqueue.WithFile(database))
 
-		server := server.NewServer(address, secret, queue)
+		server := server.NewServer(address, secret, pidfile, queue)
 		err := server.Start()
 		if err != nil {
 			fmt.Println(err)
+			os.Exit(1)
 		}
 	},
 }
@@ -49,18 +49,9 @@ var serverCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	serverCmd.PersistentFlags().String("database", path.Join(home, ".pagerduty-agent.db"), "database file for event queuing (default is $HOME/.pagerduty-agent.db)")
+	serverCmd.PersistentFlags().String("database", "/var/db/pdagent/agent.db", "database file for event queuing (default is /var/db/pdagent/agent.db)")
 
 	if err := viper.BindPFlag("database", serverCmd.PersistentFlags().Lookup("database")); err != nil {
 		fmt.Println(err)
 	}
-
-	viper.SetDefault("database", path.Join(home, ".pagerduty-agent.db"))
-
 }

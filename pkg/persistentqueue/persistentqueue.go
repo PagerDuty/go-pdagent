@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
+	"path"
 	"sync"
 )
 
@@ -67,6 +68,10 @@ func (q *PersistentQueue) Start() error {
 		}
 		q.path = dbFile.Name()
 		dbFile.Close()
+	} else {
+		if err := os.MkdirAll(path.Dir(q.path), 0644); err != nil {
+			return err
+		}
 	}
 
 	db, err := storm.Open(q.path)
