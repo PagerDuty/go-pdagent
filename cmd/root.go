@@ -58,8 +58,14 @@ func init() {
 	pflags.StringP("address", "a", "127.0.0.1:49463", "address to run and access the agent server on.")
 	pflags.StringP("secret", "s", "undefined", "secret used to authorize agent access.")
 
-	viper.BindPFlag("address", pflags.Lookup("address"))
-	viper.BindPFlag("secret", pflags.Lookup("secret"))
+	if err := viper.BindPFlag("address", pflags.Lookup("address")); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := viper.BindPFlag("secret", pflags.Lookup("secret")); err != nil {
+		fmt.Println(err)
+	}
+
 	viper.SetDefault("address", "localhost:49463")
 	viper.SetDefault("secret", common.GenerateKey())
 }

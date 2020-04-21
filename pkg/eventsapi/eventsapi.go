@@ -110,7 +110,7 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	req.Header.Add("User-Agent", defaultUserAgent)
-	req.WithContext(context)
+	req = req.WithContext(context)
 
 	httpResp, err := client.Do(req)
 	if err != nil {

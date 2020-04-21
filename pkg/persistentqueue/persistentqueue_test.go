@@ -45,5 +45,5 @@ func TestPersistentQueueSimple(t *testing.T) {
 		t.Fatalf("Expected event status to be success, was %v.", persistedEvent.Status)
 	}
 
-	q.Shutdown()
+	_ = q.Shutdown()
 }

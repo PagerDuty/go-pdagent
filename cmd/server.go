@@ -57,7 +57,10 @@ func init() {
 
 	serverCmd.PersistentFlags().String("database", path.Join(home, ".pagerduty-agent.db"), "database file for event queuing (default is $HOME/.pagerduty-agent.db)")
 
-	viper.BindPFlag("database", serverCmd.PersistentFlags().Lookup("database"))
+	if err := viper.BindPFlag("database", serverCmd.PersistentFlags().Lookup("database")); err != nil {
+		fmt.Println(err)
+	}
+
 	viper.SetDefault("database", path.Join(home, ".pagerduty-agent.db"))
 
 }

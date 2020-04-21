@@ -68,8 +68,8 @@ func TestEventQueueSingleOrdering(t *testing.T) {
 
 	_ = eq.Enqueue(&event1, respChan1)
 	_ = eq.Enqueue(&event2, respChan2)
-	_ = <-respChan1
-	_ = <-respChan2
+	<-respChan1
+	<-respChan2
 
 	if receivedEvents[0] != &event1 {
 		t.Error("Expected first event, but instead out of order..")
@@ -107,8 +107,8 @@ func TestEventQueueMultiOrdering(t *testing.T) {
 
 	_ = eq.Enqueue(&event1, respChan1)
 	_ = eq.Enqueue(&event2, respChan2)
-	_ = <-respChan1
-	_ = <-respChan2
+	<-respChan1
+	<-respChan2
 
 	if receivedEvents[0] != &event2 {
 		t.Error("Expected second event, but instead out of order..")

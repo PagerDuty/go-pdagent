@@ -18,7 +18,7 @@ func init() {
 // but may be useful more generally.
 func GenerateKey() string {
 	rk := make([]byte, 32)
-	for i, _ := range rk {
+	for i := range rk {
 		rk[i] = randChar()
 	}
 	return string(rk)
