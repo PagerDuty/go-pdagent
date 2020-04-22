@@ -11,7 +11,7 @@ import (
 var ErrPidfileExists = errors.New("pidfile already exists")
 var ErrPidfileDoesntExist = errors.New("pidfile doesn't exist")
 
-func IsRunning(pidfile string) (bool, error){
+func IsRunning(pidfile string) (bool, error) {
 	proc, err := getProcess(pidfile)
 	if err != nil {
 		return false, err
@@ -54,7 +54,7 @@ func InitPidfile(pidfile string) error {
 	}
 
 	pid := strconv.Itoa(os.Getpid())
-	return ioutil.WriteFile(pidfile, []byte(pid), 0644)
+	return ioutil.WriteFile(pidfile, []byte(pid), 0744)
 }
 
 func RemovePidfile(pidfile string) error {
@@ -69,7 +69,6 @@ func TerminateProcess(pidfile string) error {
 
 	return proc.Signal(syscall.SIGTERM)
 }
-
 
 func fileExists(f string) (bool, error) {
 	_, err := os.Stat(f)

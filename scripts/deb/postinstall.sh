@@ -21,7 +21,9 @@ if [ "$1" = "configure" ]; then
         /usr/sbin/adduser --system --shell /bin/false --no-create-home \
                           --group pdagent
 
-    chown -R pdagent:pdagent /var/db/pdagent /var/lib/pdagent /var/log/pdagent /var/run/pdagent
+    APP_ENV=production pdagent init
+
+    chown -R pdagent:pdagent /etc/pdagent /var/db/pdagent /var/lib/pdagent /var/log/pdagent /var/run/pdagent
 
     if which systemctl >/dev/null; then
         install_systemd

@@ -44,6 +44,7 @@ nfpms:
     - deb
     - rpm
   empty_folders:
+    - /etc/pdagent
     - /var/db/pdagent
     - /var/lib/pdagent
     - /var/log/pdagent

@@ -4,7 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
+Environment=APP_ENV=production
 ExecStart=/usr/local/bin/pdagent server
+ExecStop=/usr/local/bin/pdagent server stop
 KillMode=process
 TimeoutStopSec=30
 RestartSec=15

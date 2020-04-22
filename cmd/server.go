@@ -49,7 +49,9 @@ var serverCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.PersistentFlags().String("database", "/var/db/pdagent/agent.db", "database file for event queuing (default is /var/db/pdagent/agent.db)")
+	defaults := getDefaults()
+
+	serverCmd.PersistentFlags().String("database", defaults.Database, "database file for event queuing (default is /var/db/pdagent/agent.db)")
 
 	if err := viper.BindPFlag("database", serverCmd.PersistentFlags().Lookup("database")); err != nil {
 		fmt.Println(err)

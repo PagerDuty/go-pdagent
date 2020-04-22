@@ -69,7 +69,7 @@ func (q *PersistentQueue) Start() error {
 		q.path = dbFile.Name()
 		dbFile.Close()
 	} else {
-		if err := os.MkdirAll(path.Dir(q.path), 0644); err != nil {
+		if err := os.MkdirAll(path.Dir(q.path), 0744); err != nil {
 			return err
 		}
 	}

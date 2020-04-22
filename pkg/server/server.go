@@ -27,8 +27,8 @@ type Server struct {
 	Queue      Queue
 
 	pidfile string
-	secret string
-	logger *zap.SugaredLogger
+	secret  string
+	logger  *zap.SugaredLogger
 }
 
 type Option func(*Server)
@@ -43,10 +43,10 @@ func NewServer(address, secret, pidfile string, queue Queue) *Server {
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		},
-		Queue:  queue,
+		Queue:   queue,
 		pidfile: pidfile,
-		secret: secret,
-		logger: logger,
+		secret:  secret,
+		logger:  logger,
 	}
 
 	server.HTTPServer.Handler = Router(&server)
@@ -94,7 +94,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) initPidfile() error {
-	if err := os.MkdirAll(path.Dir(s.pidfile), 0644); err != nil {
+	if err := os.MkdirAll(path.Dir(s.pidfile), 0744); err != nil {
 		return err
 	}
 
