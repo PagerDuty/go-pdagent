@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	"github.com/spf13/viper"
 	"os"
 	"path"
@@ -36,7 +37,7 @@ configuration options or an existing config as its basis.`,
 		defaults := getDefaults()
 		configFile := path.Join(defaults.ConfigPath, "config.yaml")
 
-		if production {
+		if common.IsProduction() {
 			fmt.Printf("Generating production config to %v\n", configFile)
 		} else {
 			fmt.Printf("Generating config to %v\n", configFile)
