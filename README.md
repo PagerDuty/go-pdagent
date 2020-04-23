@@ -1,4 +1,6 @@
-# Pagerduty Agent
+**Note: This project is currently in beta, for the current Python-based agent see: https://github.com/PagerDuty/pdagent**
+
+# PagerDuty Agent
 
 An agent daemon to aid in creating PagerDuty events.
 
