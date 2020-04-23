@@ -25,7 +25,7 @@ You should now have a working `pdagent` binary.
 
 ## Usage
 
-On first run we recommend running `pdagent init` to generate a default config file. By default this is created as `~/.pagerduty-agent.yaml` and includes options such as which address to run the server on, the client/server secret, and where the database should live.
+On first run we recommend running `pdagent init` to generate a default config file. By default during local development this file will live in `~/.pdagent` along with any other artifacts.
 
 Once the config has been created, to start the daemon:
 
