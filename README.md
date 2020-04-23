@@ -74,8 +74,6 @@ make release # Regular distributable release, with publishing.
 make release-test # To build a local snapshot release without publishing.
 ```
 
-**Additional publishing details TBD during migration.**
-
 ## Architecture
 
 At a high level, the agent has three key components:
@@ -110,21 +108,21 @@ A small helper library used for sending events to both Events API V1 and V2 endp
 
 This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
 
-- [ ] Events API V1 support
+- [x] Events API V1 support
 - [ ] Events API V2 support.
     - [X] Parity with existing `pd-send` functionality.
     - [ ] Comprehensive Events API V2 payload support.
 - [ ] HTTP configuration.
     - [ ] Custom cert files.
-    - [ ] Proxy and firewall support.
+    - [x] Proxy and firewall support.
     - [ ] Local server security.
 - [X] Event queuing.
 - [X] Persistent queuing.
-- [ ] Legacy command wrappers.
-    - [ ] `pd-send`
-    - [ ] `pd-queue`
+- [x] Legacy command wrappers.
+    - [x] `pd-send`
+    - [x] `pd-queue`
 - [ ] Releasing
-    - [ ] Init and pre/post install scripts.
+    - [x] Init and pre/post install scripts.
     - [X] Github release support.
         - [X] Source
         - [X] Darwin
