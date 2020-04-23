@@ -21,7 +21,7 @@ if [ "$1" = "configure" ]; then
         /usr/sbin/adduser --system --shell /bin/false --no-create-home \
                           --group pdagent
 
-    APP_ENV=production pdagent init
+    APP_ENV=production /usr/local/bin/pdagent init
 
     chown -R pdagent:pdagent /etc/pdagent /var/db/pdagent /var/lib/pdagent /var/log/pdagent /var/run/pdagent
 

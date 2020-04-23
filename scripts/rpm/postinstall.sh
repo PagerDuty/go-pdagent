@@ -19,7 +19,7 @@ install_systemd () {
 /usr/bin/getent passwd pdagent >/dev/null || \
     /usr/sbin/adduser --system --shell /bin/false --no-create-home pdagent
 
-APP_ENV=production pdagent init
+APP_ENV=production /usr/local/bin/pdagent init
 
 chown -R pdagent:pdagent /etc/pdagent /var/db/pdagent /var/lib/pdagent /var/log/pdagent /var/run/pdagent
 
