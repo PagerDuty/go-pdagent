@@ -8,9 +8,9 @@ builds:
   - CGO_ENABLED=0
   ldflags:
   - -s -w
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Version={{.Version}}'
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Commit={{.ShortCommit}}'
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Date={{.Date}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Version={{.Version}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Commit={{.ShortCommit}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Date={{.Date}}'
 archives:
 - replacements:
     darwin: Darwin

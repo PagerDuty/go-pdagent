@@ -1,10 +1,11 @@
 package eventqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"testing"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 func TestEventQueueSimple(t *testing.T) {

@@ -1,9 +1,10 @@
 package persistentqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventqueue"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"io/ioutil"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventqueue"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 // Enqueue adds an event to the persistent queue for processing.

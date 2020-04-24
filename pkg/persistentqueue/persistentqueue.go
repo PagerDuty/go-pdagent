@@ -1,15 +1,16 @@
 package persistentqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventqueue"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"github.com/asdine/storm"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"path"
 	"sync"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventqueue"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/asdine/storm"
+	"go.uber.org/zap"
 )
 
 type EventQueue interface {
@@ -62,7 +63,7 @@ func NewPersistentQueue(options ...Option) *PersistentQueue {
 
 func (q *PersistentQueue) Start() error {
 	if q.tmp {
-		dbFile, err := ioutil.TempFile("", "pagerduty-agent.*.db")
+		dbFile, err := ioutil.TempFile("", "go-pdagent.*.db")
 		if err != nil {
 			return err
 		}

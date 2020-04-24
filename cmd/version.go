@@ -17,7 +17,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/spf13/cobra"
 )
 

@@ -2,9 +2,10 @@ package eventqueue
 
 import (
 	"context"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"math"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 var DefaultProcessor = EventProcessor

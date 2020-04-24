@@ -2,16 +2,17 @@ package server
 
 import (
 	"context"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
-	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
 	"path"
 	"syscall"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
+	"go.uber.org/zap"
 )
 
 type Queue interface {

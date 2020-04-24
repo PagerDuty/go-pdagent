@@ -16,7 +16,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/cmd"
+	"github.com/PagerDuty/go-pdagent/cmd"
 )
 
 func main() {

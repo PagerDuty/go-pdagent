@@ -1,9 +1,10 @@
 package persistentqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"github.com/asdine/storm"
 	"testing"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/asdine/storm"
 )
 
 func TestEvent(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/PagerDuty/pagerduty-agent
+module github.com/PagerDuty/go-pdagent
 
 go 1.13
 

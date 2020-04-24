@@ -2,9 +2,10 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {

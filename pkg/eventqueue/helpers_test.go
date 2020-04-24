@@ -1,6 +1,6 @@
 package eventqueue
 
-import "github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
+import "github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 
 func mockEventV2(key string) eventsapi.EventV2 {
 	return eventsapi.EventV2{

@@ -17,11 +17,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
-	"github.com/PagerDuty/pagerduty-agent/pkg/server"
+	"os"
+
+	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
+	"github.com/PagerDuty/go-pdagent/pkg/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // serverCmd represents the server command

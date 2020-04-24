@@ -17,10 +17,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/spf13/viper"
 	"os"
 	"path"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
 )

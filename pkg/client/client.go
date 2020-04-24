@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 type Client struct {

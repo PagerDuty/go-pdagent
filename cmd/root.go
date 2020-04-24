@@ -17,9 +17,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
 	"os"
 	"path"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -58,7 +59,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pagerduty-agent.yaml)")
+	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
 	pflags.StringP("address", "a", defaults.Address, "address to run and access the agent server on.")
 	pflags.String("pidfile", defaults.Pidfile, "pidfile for the currently running pdagent instance, if any.")
 	pflags.StringP("secret", "s", defaults.Secret, "secret used to authorize agent access.")

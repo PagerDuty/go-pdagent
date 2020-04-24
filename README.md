@@ -18,7 +18,7 @@ Currently the agent needs to be built from source, but releasing pre-built binar
 For the time being:
 
 - Install Go: https://golang.org/doc/install#install
-- Clone the project: https://github.com/PagerDuty/pagerduty-agent
+- Clone the project: https://github.com/PagerDuty/go-pdagent
 - Run `make build`
 
 You should now have a working `pdagent` binary.
