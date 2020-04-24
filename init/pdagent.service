@@ -1,0 +1,18 @@
+[Unit]
+Description=PagerDuty Agent
+After=network.target
+
+[Service]
+Type=simple
+Environment=APP_ENV=production
+ExecStart=/usr/local/bin/pdagent server
+ExecStop=/usr/local/bin/pdagent server stop
+KillMode=process
+TimeoutStopSec=30
+RestartSec=15
+User=pdagent
+Group=pdagent
+PermissionsStartOnly=true
+
+[Install]
+WantedBy=multi-user.target

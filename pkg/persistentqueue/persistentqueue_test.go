@@ -1,9 +1,10 @@
 package persistentqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
 	"testing"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 func TestPersistentQueueSimple(t *testing.T) {
@@ -45,5 +46,5 @@ func TestPersistentQueueSimple(t *testing.T) {
 		t.Fatalf("Expected event status to be success, was %v.", persistedEvent.Status)
 	}
 
-	q.Shutdown()
+	_ = q.Shutdown()
 }

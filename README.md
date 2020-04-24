@@ -1,4 +1,6 @@
-# Pagerduty Agent
+**Note: This project is currently in beta, for the current Python-based agent see: https://github.com/PagerDuty/pdagent**
+
+# PagerDuty Agent
 
 An agent daemon to aid in creating PagerDuty events.
 
@@ -9,6 +11,8 @@ Goals of this project include providing:
 - Ensuring that events are properly ordered for each integration.
 - Handling back pressure or when PagerDuty is inaccessible.
 
+If you're looking for a more comprehensive PagerDuty API Go client library and CLI, see: https://github.com/PagerDuty/go-pagerduty
+
 ## Installation
 
 Currently the agent needs to be built from source, but releasing pre-built binaries and distributing through common package managers is on our roadmap.
@@ -16,14 +20,14 @@ Currently the agent needs to be built from source, but releasing pre-built binar
 For the time being:
 
 - Install Go: https://golang.org/doc/install#install
-- Clone the project: https://github.com/PagerDuty/pagerduty-agent
+- Clone the project: https://github.com/PagerDuty/go-pdagent
 - Run `make build`
 
 You should now have a working `pdagent` binary.
 
 ## Usage
 
-On first run we recommend running `pdagent init` to generate a default config file. By default this is created as `~/.pagerduty-agent.yaml` and includes options such as which address to run the server on, the client/server secret, and where the database should live.
+On first run we recommend running `pdagent init` to generate a default config file. By default during local development this file will live in `~/.pdagent` along with any other artifacts.
 
 Once the config has been created, to start the daemon:
 
@@ -72,8 +76,6 @@ make release # Regular distributable release, with publishing.
 make release-test # To build a local snapshot release without publishing.
 ```
 
-**Additional publishing details TBD during migration.**
-
 ## Architecture
 
 At a high level, the agent has three key components:
@@ -108,21 +110,21 @@ A small helper library used for sending events to both Events API V1 and V2 endp
 
 This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
 
-- [ ] Events API V1 support
+- [x] Events API V1 support
 - [ ] Events API V2 support.
     - [X] Parity with existing `pd-send` functionality.
     - [ ] Comprehensive Events API V2 payload support.
 - [ ] HTTP configuration.
     - [ ] Custom cert files.
-    - [ ] Proxy and firewall support.
+    - [x] Proxy and firewall support.
     - [ ] Local server security.
 - [X] Event queuing.
 - [X] Persistent queuing.
-- [ ] Legacy command wrappers.
-    - [ ] `pd-send`
-    - [ ] `pd-queue`
+- [x] Legacy command wrappers.
+    - [x] `pd-send`
+    - [x] `pd-queue`
 - [ ] Releasing
-    - [ ] Init and pre/post install scripts.
+    - [x] Init and pre/post install scripts.
     - [X] Github release support.
         - [X] Source
         - [X] Darwin

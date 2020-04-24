@@ -2,15 +2,19 @@ package common
 
 import (
 	"go.uber.org/zap"
-	"os"
 )
 
 var BaseLogger *zap.Logger
 var Logger *zap.SugaredLogger
 
+// TODO: Eventually move configuration to config files.
 func init() {
-	if os.Getenv("APP_ENV") == "production" {
-		BaseLogger, _ = zap.NewProduction()
+	if IsProduction() {
+		config := zap.NewProductionConfig()
+		config.OutputPaths = []string{
+			"/var/log/pdagent/pdagent.log",
+		}
+		BaseLogger, _ = config.Build()
 	} else {
 		BaseLogger, _ = zap.NewDevelopment()
 	}

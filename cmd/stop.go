@@ -17,32 +17,36 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/spf13/viper"
+
 	"github.com/spf13/cobra"
 )
 
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Version and build information.",
+// stopCmd represents the stop command
+var stopCmd = &cobra.Command{
+	Use:   "stop",
+	Short: "Gracefully stop a running pdagent server.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Version: %v\n", common.Version)
-		fmt.Printf("Build date: %v\n", common.Date)
-		fmt.Printf("Build commit: %v\n", common.Commit)
+		pidfile := viper.GetString("pidfile")
+
+		if err := common.TerminateProcess(pidfile); err != nil {
+			fmt.Printf("Error terminating server: %v\n", err)
+
+			if err == common.ErrPidfileDoesntExist {
+				fmt.Println("This normally means a server isn't currently running, or you're running this command using a different configuration.")
+			}
+
+			os.Exit(1)
+		}
+
+		fmt.Println("Server terminated.")
+		os.Exit(0)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	serverCmd.AddCommand(stopCmd)
 }

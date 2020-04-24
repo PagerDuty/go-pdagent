@@ -17,6 +17,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
@@ -31,11 +35,28 @@ var initCmd = &cobra.Command{
 Can be run without options to automatically generate defaults, or will use
 configuration options or an existing config as its basis.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		viper.SetConfigType("yaml")
-		if err := viper.SafeWriteConfig(); err != nil {
-			fmt.Println("Error writing config", err)
+		defaults := getDefaults()
+		configFile := path.Join(defaults.ConfigPath, "config.yaml")
+
+		if common.IsProduction() {
+			fmt.Printf("Generating production config to %v\n", configFile)
+		} else {
+			fmt.Printf("Generating config to %v\n", configFile)
 		}
-		fmt.Println("Config file generated.")
+
+		if err := os.MkdirAll(path.Dir(configFile), 0744); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		viper.SetConfigType("yaml")
+
+		if err := viper.SafeWriteConfigAs(configFile); err != nil {
+			fmt.Printf("Error writing config: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Config file generated to %v\n", configFile)
 	},
 }
 

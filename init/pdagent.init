@@ -1,0 +1,91 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          pdagent
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: PagerDuty Agent
+# Description:       PagerDuty Agent daemon process.
+### END INIT INFO
+
+EXEC=/usr/local/bin/pdagent
+EXEC_NAME=$(basename "$EXEC")
+PID_DIR=/var/run/pdagent
+PID_FILE=$PID_DIR/pidfile
+
+[ -x $EXEC ] || {
+  echo "Missing pdagent executable: $EXEC." >&2
+  # not an error since an uninstall without removing configuration files just
+  # might result in init script being present but no executable available.
+  exit 0
+}
+
+get_pid() {
+  [ -e $PID_FILE ] && cat $PID_FILE
+}
+
+is_running() {
+  pid=$(get_pid)
+  [ -n "$pid" ] && ps -p $pid | grep "$EXEC_NAME" >/dev/null 2>&1
+}
+
+start() {
+  echo -n "Starting: pdagent"
+  is_running || {
+    su -s /bin/bash -c "$EXEC server"
+    [ $? -eq 0 ] || return $?
+  }
+  echo "."
+  return 0
+}
+
+stop() {
+  echo -n "Stopping: pdagent"
+  is_running && {
+    su -s /bin/bash -c "$EXEC server stop"
+    [ $? -eq 0 ] || return $?
+    c=30  # wait up to 15sec for process to stop running.
+    while [ $c -gt 0 ]; do
+      if is_running; then
+        sleep 1
+        c=$(( $c - 1 ))
+      else
+        c=0
+      fi
+    done
+    is_running && {
+      echo "... still not stopped."
+      return 1
+    }
+  }
+  echo "."
+  return 0
+}
+
+status() {
+  if is_running; then
+    echo "pdagent (pid $(get_pid)) is running."
+  else
+    echo "pdagent is not running."
+  fi
+}
+
+case $1 in
+start)
+  start
+  ;;
+stop)
+  stop
+  ;;
+status)
+  status
+  ;;
+restart)
+  stop && start
+  ;;
+*)
+  echo "Usage: $(basename "$0") {start|stop|restart|status}" >&2
+  exit 1
+esac

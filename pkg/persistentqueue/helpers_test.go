@@ -1,13 +1,14 @@
 package persistentqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventqueue"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"go.uber.org/zap"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventqueue"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"go.uber.org/zap"
 )
 
 // TODO Consider replacing with `ioutil.TempDir` and/or `ioutil.TempFile`.

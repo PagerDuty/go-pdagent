@@ -17,11 +17,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/PagerDuty/pagerduty-agent/pkg/client"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+
+	"github.com/PagerDuty/go-pdagent/pkg/client"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // queueCmd represents the storage command

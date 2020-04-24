@@ -2,10 +2,11 @@ package persistentqueue
 
 import (
 	"errors"
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"github.com/asdine/storm"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/asdine/storm"
 )
 
 const StatusPending = "pending"

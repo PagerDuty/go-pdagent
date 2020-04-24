@@ -1,11 +1,12 @@
 package eventqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"gopkg.in/h2non/gock.v1"
 	"testing"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestEventsV2ProcessorSimple(t *testing.T) {

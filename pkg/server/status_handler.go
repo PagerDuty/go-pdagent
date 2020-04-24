@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/persistentqueue"
 	"net/http"
+
+	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
 )
 
 func (s *Server) StatusHandler(rw http.ResponseWriter, req *http.Request) {

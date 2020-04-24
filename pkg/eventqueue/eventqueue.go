@@ -1,10 +1,11 @@
 package eventqueue
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"github.com/PagerDuty/pagerduty-agent/pkg/eventsapi"
-	"go.uber.org/zap"
 	"sync"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"go.uber.org/zap"
 )
 
 const DefaultBufferSize = 1000

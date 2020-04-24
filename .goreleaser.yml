@@ -8,9 +8,9 @@ builds:
   - CGO_ENABLED=0
   ldflags:
   - -s -w
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Version={{.Version}}'
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Commit={{.ShortCommit}}'
-  - -X 'github.com/PagerDuty/pagerduty-agent/pkg/common.Date={{.Date}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Version={{.Version}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Commit={{.ShortCommit}}'
+  - -X 'github.com/PagerDuty/go-pdagent/pkg/common.Date={{.Date}}'
 archives:
 - replacements:
     darwin: Darwin
@@ -32,9 +32,7 @@ changelog:
     - '^test:'
 nfpms:
 - replacements:
-    darwin: Darwin
     linux: Linux
-    windows: Windows
     386: i386
     amd64: x86_64
   vendor: PagerDuty Inc.
@@ -45,4 +43,26 @@ nfpms:
   formats:
     - deb
     - rpm
-  # TODO: Pre/post scripts migrated from previous agent.
+  empty_folders:
+    - /etc/pdagent
+    - /var/db/pdagent
+    - /var/lib/pdagent
+    - /var/log/pdagent
+    - /var/run/pdagent
+  files:
+    "init/pdagent.init": "/var/lib/pdagent/scripts/pdagent.init"
+    "init/pdagent.service": "/var/lib/pdagent/scripts/pdagent.service"
+    "scripts/pd-*": "/usr/local/bin/"
+  overrides:
+    deb:
+      scripts:
+        preinstall: "scripts/deb/preinstall.sh"
+        postinstall: "scripts/deb/postinstall.sh"
+        preremove: "scripts/deb/preremove.sh"
+        postremove: "scripts/deb/postremove.sh"
+    rpm:
+      scripts:
+        preinstall: "scripts/rpm/preinstall.sh"
+        postinstall: "scripts/rpm/postinstall.sh"
+        preremove: "scripts/rpm/preremove.sh"
+        postremove: "scripts/rpm/postremove.sh"

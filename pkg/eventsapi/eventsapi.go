@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
 var ErrInvalidRoutingKey = errors.New("invalid routing key")
@@ -110,7 +110,7 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	req.Header.Add("User-Agent", defaultUserAgent)
-	req.WithContext(context)
+	req = req.WithContext(context)
 
 	httpResp, err := client.Do(req)
 	if err != nil {
@@ -135,7 +135,7 @@ func userAgent() string {
 	commit := common.Commit
 	date := common.Date
 
-	return fmt.Sprintf("pagerduty-agent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
+	return fmt.Sprintf("go-pdagent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
 }
 
 func validateRoutingKey(routingKey string) error {

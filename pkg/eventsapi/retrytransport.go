@@ -1,13 +1,14 @@
 package eventsapi
 
 import (
-	"github.com/PagerDuty/pagerduty-agent/pkg/common"
-	"go.uber.org/zap"
-	"golang.org/x/net/http2"
 	"math"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"go.uber.org/zap"
+	"golang.org/x/net/http2"
 )
 
 const defaultMaxInterval = 30 * time.Second
