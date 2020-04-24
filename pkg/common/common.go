@@ -2,25 +2,7 @@ package common
 
 import "time"
 
-// Commit normally auto-injected at build time.
-var Commit = ""
-
-// Date normally auto-injected at build time.
-var Date = ""
-
-// Version normally auto-injected at build time.
-var Version = ""
-
-func init() {
-	if Commit == "" {
-		Commit = "unavailable"
-	}
-
-	if Date == "" {
-		Date = time.Now().Format(time.RFC3339)
-	}
-
-	if Version == "" {
-		Version = "unavailable"
-	}
-}
+// Normally set at build time.
+var Commit = "unavailable"
+var Date = time.Now().Format(time.RFC3339)
+var Version = "unavailable"
