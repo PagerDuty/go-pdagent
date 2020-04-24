@@ -64,10 +64,6 @@ type ResponseV2 struct {
 	Errors   []string `json:"errors,omitempty"`
 }
 
-func (r *ResponseV2) IsSuccess() bool {
-	return r.Status == "success" || r.BaseResponse.IsSuccess()
-}
-
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event *EventV2) (*ResponseV2, error) {
 	var response ResponseV2

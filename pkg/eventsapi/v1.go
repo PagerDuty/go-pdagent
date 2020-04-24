@@ -56,10 +56,6 @@ type ResponseV1 struct {
 	Errors      []string `json:"errors,omitempty"`
 }
 
-func (r *ResponseV1) IsSuccess() bool {
-	return r.Status == "success" || r.BaseResponse.IsSuccess()
-}
-
 // CreateV1 sends an event to explicitly the Events API V1.
 //
 // Keeping the `create` semantics versus `enqueue` to more closely match the

@@ -17,7 +17,7 @@ func TestCommonEnqueueV2(t *testing.T) {
 	}
 
 	mockEndpointV2(200, mockResponse)
-	gock.InterceptClient(DefaultHttpClient)
+	gock.InterceptClient(DefaultHTTPClient)
 
 	event := EventV2{
 		RoutingKey:  "11863b592c824bfc8989d9cba76abcde",
@@ -60,7 +60,7 @@ func TestCommonEnqueueV1(t *testing.T) {
 	}
 
 	mockEndpointV1(200, mockResponse)
-	gock.InterceptClient(DefaultHttpClient)
+	gock.InterceptClient(DefaultHTTPClient)
 
 	event := EventV1{
 		ServiceKey:  "11863b592c824bfc8989d9cba76abcde",

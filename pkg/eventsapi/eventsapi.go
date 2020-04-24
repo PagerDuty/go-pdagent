@@ -28,10 +28,7 @@ type Event interface {
 // Response defines a minimal interface for the events APIs' HTTP responses.
 type Response interface {
 	GetHTTPResponse() *http.Response
-	IsRetryable() bool
-	IsSuccess() bool
 	SetHTTPResponse(*http.Response)
-	SetRetryable(bool)
 }
 
 // BaseResponse is a minimal implementation of the `Response` interface.
@@ -44,40 +41,6 @@ func (br *BaseResponse) GetHTTPResponse() *http.Response {
 	return br.HTTPResponse
 }
 
-// IsRetryable returns true if the corresponding request failed but can be
-// retried.
-//
-// Per documentation this is when the there's a network failure or the response
-// status code is 429 or a 5XX.
-func (br *BaseResponse) IsRetryable() bool {
-	if br.HTTPResponse == nil {
-		return false
-	}
-	statusCode := br.HTTPResponse.StatusCode
-	return br.retryable || statusCode == 429 || statusCode/100 == 5
-}
-
-// IsSuccess returns true if the corresponding request was successful.
-//
-// Per documentation this is when the server responds with a 202, but we treat
-// any 2XX as a success.
-func (br *BaseResponse) IsSuccess() bool {
-	if br.HTTPResponse == nil {
-		return false
-	}
-	return br.HTTPResponse.StatusCode/100 == 2
-}
-
-// SetRetryable indicates explicitly whether a corresponding request was
-// retryable.
-//
-// One particular use case is when a network error occurs -- we don't have a
-// HTTP response to analyze but want a way to indicate back to clients that it's
-// safe to retry.
-func (br *BaseResponse) SetRetryable(retryable bool) {
-	br.retryable = retryable
-}
-
 // SetHTTPResponse sets `HTTPResponse` on a response.
 func (br *BaseResponse) SetHTTPResponse(resp *http.Response) {
 	br.HTTPResponse = resp
@@ -87,20 +50,20 @@ type enqueueConfig struct {
 	HTTPClient *http.Client
 }
 
-var DefaultHttpClient *http.Client
+var DefaultHTTPClient *http.Client
 
 var defaultEnqueueConfig enqueueConfig
 
 var defaultUserAgent string
 
 func init() {
-	DefaultHttpClient = &http.Client{
-		Transport: http.DefaultTransport,
-		Timeout:   30 * time.Second,
+	DefaultHTTPClient = &http.Client{
+		Transport: NewRetryTransport(),
+		Timeout:   5 * time.Minute,
 	}
 
 	defaultEnqueueConfig = enqueueConfig{
-		HTTPClient: DefaultHttpClient,
+		HTTPClient: DefaultHTTPClient,
 	}
 
 	defaultUserAgent = userAgent()
@@ -151,9 +114,9 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 
 	httpResp, err := client.Do(req)
 	if err != nil {
-		response.SetRetryable(true)
 		return err
 	}
+	defer httpResp.Body.Close()
 	response.SetHTTPResponse(httpResp)
 
 	respBody, err := ioutil.ReadAll(httpResp.Body)
