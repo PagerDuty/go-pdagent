@@ -11,6 +11,8 @@ Goals of this project include providing:
 - Ensuring that events are properly ordered for each integration.
 - Handling back pressure or when PagerDuty is inaccessible.
 
+If you're looking for a more comprehensive PagerDuty API Go client library and CLI, see: https://github.com/PagerDuty/go-pagerduty
+
 ## Installation
 
 Currently the agent needs to be built from source, but releasing pre-built binaries and distributing through common package managers is on our roadmap.
