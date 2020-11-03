@@ -62,9 +62,8 @@ func TestCreateV1InvalidEvent(t *testing.T) {
 	}
 
 	resp, err := CreateV1(context.Background(), http.DefaultClient, &event)
-	if err != nil {
-		t.Error("Unexpected error during event creation", err)
-		return
+	if err == nil {
+		t.Error("Expected error during event enqueue")
 	}
 
 	if resp.Status != "invalid event" {
@@ -92,9 +91,8 @@ func TestCreateV1TooManyRequests(t *testing.T) {
 	}
 
 	resp, err := CreateV1(context.Background(), http.DefaultClient, &event)
-	if err != nil {
-		t.Error("Unexpected error during event creation", err)
-		return
+	if err == nil {
+		t.Error("Expected error during event enqueue")
 	}
 
 	if resp.HTTPResponse.StatusCode != 429 {
