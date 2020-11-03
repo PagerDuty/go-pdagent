@@ -64,12 +64,13 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			r.log.Debugf("Successful or non-retryable response.")
 			return resp, err
 		} else if !r.IsRetryable(resp, err) {
-			if err == nil {
-				err = ErrAPIError
+			if resp != nil {
+				r.log.Infof("Non-retryable response: %v", resp.Status)
+				return resp, nil
 			}
 
-			r.log.Errorf("Error encountered: %v", resp.Status)
-			return resp, err
+			r.log.Infof("Non-retryable error: %v", err)
+			return nil, err
 		}
 
 		backoff := r.Backoff(tries)
@@ -87,14 +88,14 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 
+	// If we exhaust our retries, return the last response and error received.
 	if resp != nil {
 		r.log.Errorf("Exhausted retries, status was: %v", resp.StatusCode)
-	} else {
-		r.log.Errorf("Exhausted retries, error was: %v", err)
+		return resp, nil
 	}
 
-	// If we exhaust our retries, return the last response and error received.
-	return resp, err
+	r.log.Errorf("Exhausted retries, error was: %v", err)
+	return nil, err
 }
 
 // calculateBackoff returns an exponential duration based on the try count.

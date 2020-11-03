@@ -29,11 +29,14 @@ type Event interface {
 type Response interface {
 	GetHTTPResponse() *http.Response
 	SetHTTPResponse(*http.Response)
+	IsSuccessful() bool
+	MarkSuccessful()
 }
 
 // BaseResponse is a minimal implementation of the `Response` interface.
 type BaseResponse struct {
 	HTTPResponse *http.Response
+	Successful   bool
 	retryable    bool
 }
 
@@ -44,6 +47,14 @@ func (br *BaseResponse) GetHTTPResponse() *http.Response {
 // SetHTTPResponse sets `HTTPResponse` on a response.
 func (br *BaseResponse) SetHTTPResponse(resp *http.Response) {
 	br.HTTPResponse = resp
+}
+
+func (br *BaseResponse) IsSuccessful() bool {
+	return br.Successful
+}
+
+func (br *BaseResponse) MarkSuccessful() {
+	br.Successful = true
 }
 
 type enqueueConfig struct {
@@ -125,6 +136,9 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	_ = json.Unmarshal(respBody, &response)
+	if isSuccess(httpResp, err) {
+		response.MarkSuccessful()
+	}
 
 	return nil
 }

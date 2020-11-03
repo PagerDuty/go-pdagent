@@ -34,7 +34,12 @@ func (q *MockEventQueue) Enqueue(_ eventsapi.Event, c chan<- eventqueue.Response
 	q.logger.Debug("Enqueue called.")
 	go func() {
 		q.logger.Debug("Response sent called.")
-		c <- eventqueue.Response{}
+		response := &eventsapi.BaseResponse{
+			Successful: true,
+		}
+		c <- eventqueue.Response{
+			Response: response,
+		}
 	}()
 
 	q.logger.Debug("Enqueue returning.")
