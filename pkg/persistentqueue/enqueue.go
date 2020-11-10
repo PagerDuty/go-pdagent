@@ -1,8 +1,6 @@
 package persistentqueue
 
 import (
-	"io/ioutil"
-
 	"github.com/PagerDuty/go-pdagent/pkg/eventqueue"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
@@ -57,14 +55,6 @@ func (q *PersistentQueue) processEvent(e *Event) {
 		} else {
 			e.Status = StatusSuccess
 			q.logger.Infof("EventQueue returned success for %v. ", e.Key)
-		}
-
-		if resp.Response != nil {
-			httpResponse := resp.Response.GetHTTPResponse()
-			if httpResponse != nil {
-				respBody, _ := ioutil.ReadAll(httpResponse.Body)
-				e.ResponseBody = respBody
-			}
 		}
 
 		err := e.Update(q.Events)

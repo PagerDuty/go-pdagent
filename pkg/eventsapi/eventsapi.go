@@ -125,8 +125,11 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	_ = json.Unmarshal(respBody, &response)
+	if isSuccess(httpResp, err) {
+		return nil
+	}
 
-	return nil
+	return ErrAPIError
 }
 
 func userAgent() string {
