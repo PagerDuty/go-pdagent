@@ -44,12 +44,12 @@ pdagent help
 Perhaps the most common command, sending events:
 
 ```
-pdagent send \
-  -k v4g5q7yie1qee1yio2uimz8yfbjenvj9 \
+pdagent enqueue \
+  -k your_key_goes_here \
   -t trigger \
-  -d "This is a test event" \
-  -c "PagerDuty Test" \
+  -d "This is only a test" \
   -u "http://pagerduty.com" \
+  -e "error" \
   -f some_field=some_value
 ```
 
@@ -110,10 +110,10 @@ A small helper library used for sending events to both Events API V1 and V2 endp
 
 This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
 
-- [x] Events API V1 support
-- [ ] Events API V2 support.
+- [ ] Events API V1 support.
+- [X] Events API V2 support.
     - [X] Parity with existing `pd-send` functionality.
-    - [ ] Comprehensive Events API V2 payload support.
+    - [X] Comprehensive Events API V2 payload support (no links / images yet).
 - [ ] HTTP configuration.
     - [ ] Custom cert files.
     - [x] Proxy and firewall support.
