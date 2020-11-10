@@ -114,12 +114,12 @@ func (q *EventQueue) ensureWorker(key string) {
 	}
 
 	c := make(chan Job, DefaultBufferSize)
+	q.wg.Add(1)
 	go q.worker(key, c)
 	q.queues[key] = c
 }
 
 func (q *EventQueue) worker(key string, c <-chan Job) {
-	q.wg.Add(1)
 	defer q.wg.Done()
 	logger := q.logger.Named(key)
 
