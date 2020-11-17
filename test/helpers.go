@@ -13,23 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package test
 
 import (
-	"fmt"
-
-	"github.com/PagerDuty/go-pdagent/pkg/common"
-	"github.com/spf13/cobra"
+	"bytes"
+	"io"
+	"os"
 )
 
-func NewVersionCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Version and build information.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Version: %v\n", common.Version)
-			fmt.Printf("Build date: %v\n", common.Date)
-			fmt.Printf("Build commit: %v\n", common.Commit)
-		},
-	}
+func CaptureStdout(f func() error) (string, error) {
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := f()
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+
+	return buf.String(), err
 }

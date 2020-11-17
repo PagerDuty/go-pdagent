@@ -28,20 +28,7 @@ import (
 )
 
 var cfgFile string
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "pdagent",
-	Short: "PagerDuty Agent CLI",
-	Long: `A PagerDuty Agent and corresponding Command Line Interface.
-
-The agent acts as a local server between your own infrastructure and PagerDuty,
-providing command line tools to send PagerDuty events while ensuring event
-ordering and mitigating backpressure.
-
-On first run it's recommended you run "init" to generate a default
-configuration, then run "server" to start the agent itself.`,
-}
+var rootCmd *cobra.Command
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -53,10 +40,30 @@ func Execute() {
 }
 
 func init() {
+	config := New()
+
+	rootCmd = NewRootCmd(config)
+	cobra.OnInitialize(initConfig)
+}
+
+func NewRootCmd(config *Config) *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "pdagent",
+		Short: "PagerDuty Agent CLI",
+		Long: `A PagerDuty Agent and corresponding Command Line Interface.
+	
+	The agent acts as a local server between your own infrastructure and PagerDuty,
+	providing command line tools to send PagerDuty events while ensuring event
+	ordering and mitigating backpressure.
+	
+	On first run it's recommended you run "init" to generate a default
+	configuration, then run "server" to start the agent itself.`,
+		SilenceErrors: true,
+		SilenceUsage:  true,
+	}
+
 	defaults := getDefaults()
 	rootCmd.Version = common.Version
-
-	cobra.OnInitialize(initConfig)
 
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
@@ -75,6 +82,13 @@ func init() {
 	if err := viper.BindPFlag("secret", pflags.Lookup("secret")); err != nil {
 		fmt.Println(err)
 	}
+
+	// All top-level commands go here
+	rootCmd.AddCommand(NewInitCmd())
+	rootCmd.AddCommand(NewVersionCmd())
+	rootCmd.AddCommand(NewEnqueueCmd(config))
+
+	return rootCmd
 }
 
 // initConfig reads in config file and ENV variables if set.

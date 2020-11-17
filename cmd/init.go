@@ -26,40 +26,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// sendCmd represents the send command
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Generate a new initial configuration file.",
-	Long: `Generate a new initial configuration file
+func NewInitCmd() *cobra.Command {
+	initCmd := &cobra.Command{
+		Use:   "init",
+		Short: "Generate a new initial configuration file.",
+		Long: `Generate a new initial configuration file
+	
+	Can be run without options to automatically generate defaults, or will use
+	configuration options or an existing config as its basis.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			defaults := getDefaults()
+			configFile := path.Join(defaults.ConfigPath, "config.yaml")
 
-Can be run without options to automatically generate defaults, or will use
-configuration options or an existing config as its basis.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		defaults := getDefaults()
-		configFile := path.Join(defaults.ConfigPath, "config.yaml")
+			if common.IsProduction() {
+				fmt.Printf("Generating production config to %v\n", configFile)
+			} else {
+				fmt.Printf("Generating config to %v\n", configFile)
+			}
 
-		if common.IsProduction() {
-			fmt.Printf("Generating production config to %v\n", configFile)
-		} else {
-			fmt.Printf("Generating config to %v\n", configFile)
-		}
+			if err := os.MkdirAll(path.Dir(configFile), 0744); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
-		if err := os.MkdirAll(path.Dir(configFile), 0744); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+			viper.SetConfigType("yaml")
 
-		viper.SetConfigType("yaml")
+			if err := viper.SafeWriteConfigAs(configFile); err != nil {
+				fmt.Printf("Error writing config: %v\n", err)
+				os.Exit(1)
+			}
 
-		if err := viper.SafeWriteConfigAs(configFile); err != nil {
-			fmt.Printf("Error writing config: %v\n", err)
-			os.Exit(1)
-		}
+			fmt.Printf("Config file generated to %v\n", configFile)
+		},
+	}
 
-		fmt.Printf("Config file generated to %v\n", configFile)
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(initCmd)
+	return initCmd
 }

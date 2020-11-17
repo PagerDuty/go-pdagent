@@ -18,22 +18,42 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
-	"github.com/PagerDuty/go-pdagent/pkg/client"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var customDetails map[string]string
+func NewEnqueueCmd(config *Config) *cobra.Command {
+	var customDetails map[string]string
 
-var sendEvent = eventsapi.EventV2{
-	Payload: eventsapi.PayloadV2{},
+	var sendEvent = eventsapi.EventV2{
+		Payload: eventsapi.PayloadV2{},
+	}
+
+	cmd := &cobra.Command{
+		Use:   "enqueue",
+		Short: "Queue up a trigger, acknowledge, or resolve v2 event to PagerDuty",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSendCommand(config, sendEvent, customDetails)
+		},
+	}
+
+	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
+	cmd.Flags().StringVarP(&sendEvent.EventAction, "event-action", "t", "", "The type of event")
+	cmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Summary, "summary", "d", "", "A brief text summary of the event")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Source, "source", "u", "", "The unique location of the affected system")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Severity, "severity", "e", "error", "The perceived severity of the status the event is describing with respect to the affected system")
+	cmd.Flags().StringVar(&sendEvent.Payload.Component, "component", "", "Component of the source machine that is responsible for the event")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Group, "group", "g", "", "Logical grouping of components of a service")
+	cmd.Flags().StringVar(&sendEvent.Payload.Class, "class", "", "The class/type of the event")
+	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+
+	return cmd
 }
 
-func runSendCommand(cmd *cobra.Command, args []string) {
-	c := client.NewClient(viper.GetString("address"), viper.GetString("secret"))
+func runSendCommand(config *Config, sendEvent eventsapi.EventV2, customDetails map[string]string) error {
+	c, _ := config.Client()
 
 	// Manually mapping as a workaround for the map type mismatch.
 	sendEvent.Payload.CustomDetails = map[string]interface{}{}
@@ -43,36 +63,15 @@ func runSendCommand(cmd *cobra.Command, args []string) {
 
 	resp, err := c.Send(sendEvent)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println(string(respBody))
-}
-
-var enqueueCmd = &cobra.Command{
-	Use:   "enqueue",
-	Short: "Queue up a trigger, acknowledge, or resolve v2 event to PagerDuty",
-	Run:   runSendCommand,
-}
-
-func init() {
-	rootCmd.AddCommand(enqueueCmd)
-
-	enqueueCmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
-	enqueueCmd.Flags().StringVarP(&sendEvent.EventAction, "event-action", "t", "", "The type of event")
-	enqueueCmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
-	enqueueCmd.Flags().StringVarP(&sendEvent.Payload.Summary, "summary", "d", "", "A brief text summary of the event")
-	enqueueCmd.Flags().StringVarP(&sendEvent.Payload.Source, "source", "u", "", "The unique location of the affected system")
-	enqueueCmd.Flags().StringVarP(&sendEvent.Payload.Severity, "severity", "e", "error", "The perceived severity of the status the event is describing with respect to the affected system")
-	enqueueCmd.Flags().StringVar(&sendEvent.Payload.Component, "component", "", "Component of the source machine that is responsible for the event")
-	enqueueCmd.Flags().StringVarP(&sendEvent.Payload.Group, "group", "g", "", "Logical grouping of components of a service")
-	enqueueCmd.Flags().StringVar(&sendEvent.Payload.Class, "class", "", "The class/type of the event")
-	enqueueCmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+	return nil
 }
