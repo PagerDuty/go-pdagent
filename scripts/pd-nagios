@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# pd-nagios is a wrapper matching our legacy Python pdagent Nagios send command.
+
+pdagent send-nagios $@
