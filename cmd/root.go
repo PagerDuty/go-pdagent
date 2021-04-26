@@ -84,9 +84,12 @@ func NewRootCmd(config *Config) *cobra.Command {
 	}
 
 	// All top-level commands go here
-	rootCmd.AddCommand(NewInitCmd())
-	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(NewEnqueueCmd(config))
+	rootCmd.AddCommand(NewInitCmd())
+	rootCmd.AddCommand(NewQueueCmd(config))
+	rootCmd.AddCommand(NewSendCmd(config))
+	rootCmd.AddCommand(NewServerCmd())
+	rootCmd.AddCommand(NewVersionCmd())
 
 	return rootCmd
 }

@@ -39,7 +39,7 @@ func TestEnqueue_noInput(t *testing.T) {
 
 	cmd := NewEnqueueCmd(realConfig)
 
-	gock.New("http://127.0.0.1:49463").
+	gock.New(getDefaults().Address).
 		Post("/send").
 		BodyString(`{"routing_key":"","event_action":"","payload":{"summary":"","source":"","severity":"error"}}`).
 		Reply(200).
@@ -84,7 +84,7 @@ func TestEnqueue_validInput(t *testing.T) {
 		"-d", Summary,
 	})
 
-	gock.New("http://127.0.0.1:49463").
+	gock.New(getDefaults().Address).
 		Post("/send").
 		JSON(map[string]interface{}{
 			"routing_key":  RoutingKey,

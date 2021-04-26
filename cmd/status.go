@@ -20,39 +20,40 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/PagerDuty/go-pdagent/pkg/client"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-// queueCmd represents the storage command
-var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Print queue status information.",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := client.NewClient(viper.GetString("address"), viper.GetString("secret"))
-		rk, err := cmd.Flags().GetString("routing-key")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+func NewQueueStatusCmd(config *Config) *cobra.Command {
+	var routingKey string
 
-		resp, err := c.QueueStatus(rk)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	cmd := &cobra.Command{
+		Use:   "status",
+		Short: "Print queue status information.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runStatusCommand(config, routingKey)
+		},
+	}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	cmd.Flags().StringVarP(&routingKey, "routing-key", "k", "", "The Events API Key to check")
 
-		fmt.Println(string(respBody))
-	},
+	return cmd
 }
 
-func init() {
-	queueCmd.AddCommand(statusCmd)
+func runStatusCommand(config *Config, routingKey string) error {
+	c, _ := config.Client()
+
+	resp, err := c.QueueStatus(routingKey)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(respBody))
+	return nil
 }
