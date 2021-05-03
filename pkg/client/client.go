@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
@@ -18,12 +17,9 @@ type Client struct {
 	secret string
 }
 
-func NewClient(serverAddress, secret string) *Client {
+func NewClient(httpClient *http.Client, serverAddress, secret string) *Client {
 	return &Client{
-		HTTPClient: &http.Client{
-			Transport: http.DefaultTransport,
-			Timeout:   5 * time.Second,
-		},
+		HTTPClient:    httpClient,
 		ServerAddress: serverAddress,
 		secret:        secret,
 	}
@@ -47,6 +43,9 @@ func (c *Client) Send(event eventsapi.EventV2) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
 
 	return c.Do(req)
 }

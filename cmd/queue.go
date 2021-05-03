@@ -19,14 +19,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// queueCmd represents the storage command
-var queueCmd = &cobra.Command{
-	Use:   "queue",
-	Short: "Access the daemon's event queue.",
-}
+func NewQueueCmd(config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "queue",
+		Short: "Access the daemon's event queue.",
+	}
 
-func init() {
-	rootCmd.AddCommand(queueCmd)
+	cmd.AddCommand(NewQueueRetryCmd(config))
+	cmd.AddCommand(NewQueueStatusCmd(config))
 
-	queueCmd.PersistentFlags().StringP("routing-key", "k", "", "Service Events API routing key")
+	return cmd
 }

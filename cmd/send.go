@@ -16,25 +16,35 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
 
-var sendCmd = &cobra.Command{
-	Use:   "send",
-	Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
-	Long: `Queue up a trigger, acknowledge, or resolve V2 event to PagerDuty 
-using a backwards-compatible set of flags.`,
-	Run: runSendCommand,
-}
+func NewSendCmd(config *Config) *cobra.Command {
+	var customDetails map[string]string
 
-func init() {
-	rootCmd.AddCommand(sendCmd)
+	var sendEvent = eventsapi.EventV2{
+		Payload: eventsapi.PayloadV2{},
+	}
 
-	sendCmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
-	sendCmd.Flags().StringVarP(&sendEvent.EventAction, "event-type", "t", "", "Event type")
-	sendCmd.Flags().StringVarP(&sendEvent.Payload.Summary, "description", "d", "", "Short description of the problem")
-	sendCmd.Flags().StringVarP(&sendEvent.DedupKey, "incident-key", "i", "", "Incident Key")
-	sendCmd.Flags().StringVarP(&sendEvent.Payload.Component, "client", "c", "", "Client")
-	sendCmd.Flags().StringVarP(&sendEvent.Payload.Source, "client-url", "u", "", "Client URL")
-	sendCmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+	cmd := &cobra.Command{
+		Use:   "send",
+		Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
+		Long: `Queue up a trigger, acknowledge, or resolve V2 event to PagerDuty 
+		using a backwards-compatible set of flags.`,
+
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSendCommand(config, sendEvent, customDetails)
+		},
+	}
+
+	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
+	cmd.Flags().StringVarP(&sendEvent.EventAction, "event-type", "t", "", "Event type")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Summary, "description", "d", "", "Short description of the problem")
+	cmd.Flags().StringVarP(&sendEvent.DedupKey, "incident-key", "i", "", "Incident Key")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Component, "client", "c", "", "Client")
+	cmd.Flags().StringVarP(&sendEvent.Payload.Source, "client-url", "u", "", "Client URL")
+	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+
+	return cmd
 }

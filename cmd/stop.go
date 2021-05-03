@@ -25,28 +25,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// stopCmd represents the stop command
-var stopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "Gracefully stop a running pdagent server.",
-	Run: func(cmd *cobra.Command, args []string) {
-		pidfile := viper.GetString("pidfile")
+func NewServerStopCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "stop",
+		Short: "Gracefully stop a running pdagent server.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runStopCommand()
+		},
+	}
 
-		if err := common.TerminateProcess(pidfile); err != nil {
-			fmt.Printf("Error terminating server: %v\n", err)
-
-			if err == common.ErrPidfileDoesntExist {
-				fmt.Println("This normally means a server isn't currently running, or you're running this command using a different configuration.")
-			}
-
-			os.Exit(1)
-		}
-
-		fmt.Println("Server terminated.")
-		os.Exit(0)
-	},
+	return cmd
 }
 
-func init() {
-	serverCmd.AddCommand(stopCmd)
+func runStopCommand() error {
+	pidfile := viper.GetString("pidfile")
+
+	if err := common.TerminateProcess(pidfile); err != nil {
+		fmt.Printf("Error terminating server: %v\n", err)
+
+		if err == common.ErrPidfileDoesntExist {
+			fmt.Println("This normally means a server isn't currently running, or you're running this command using a different configuration.")
+		}
+
+		os.Exit(1)
+	}
+
+	fmt.Println("Server terminated.")
+	os.Exit(0)
+	return nil
 }

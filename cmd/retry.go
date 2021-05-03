@@ -20,39 +20,40 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/PagerDuty/go-pdagent/pkg/client"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-// queueCmd represents the storage command
-var retryCmd = &cobra.Command{
-	Use:   "retry",
-	Short: "Retry failed events.",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := client.NewClient(viper.GetString("address"), viper.GetString("secret"))
-		rk, err := cmd.Flags().GetString("routing-key")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+func NewQueueRetryCmd(config *Config) *cobra.Command {
+	var routingKey string
 
-		resp, err := c.QueueRetry(rk)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	cmd := &cobra.Command{
+		Use:   "retry",
+		Short: "Retry failed events.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runRetryCommand(config, routingKey)
+		},
+	}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	cmd.Flags().StringVarP(&routingKey, "routing-key", "k", "", "The Events API Key to check")
 
-		fmt.Println(string(respBody))
-	},
+	return cmd
 }
 
-func init() {
-	queueCmd.AddCommand(retryCmd)
+func runRetryCommand(config *Config, routingKey string) error {
+	c, _ := config.Client()
+
+	resp, err := c.QueueRetry(routingKey)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(respBody))
+	return nil
 }
