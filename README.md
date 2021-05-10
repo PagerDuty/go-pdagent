@@ -78,7 +78,7 @@ make release-test # To build a local snapshot release without publishing.
 
 ## Architecture
 
-![pdagent architecture diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/rafusel/go-pdagent/add-architecture-diagram/docs/architecture-diagram.txt)
+![pdagent architecture diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/PagerDuty/go-pdagent/add-architecture-diagram/docs/architecture-diagram.txt)
 
 At a high level, the agent has three key components:
 
