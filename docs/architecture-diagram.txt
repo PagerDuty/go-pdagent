@@ -1,0 +1,30 @@
+@startuml
+skinparam componentStyle rectangle
+
+component [**PagerDuty Events API**] as API
+component User [
+  **PDAgent User**
+  Interacts with the agent via CLI.
+]
+
+package "pdagent" {
+  component Server [
+    **Server**
+    A daemon running on your server.
+    Maintains a queue of events to send.
+    Handles back-pressure and event
+    ordering by routing key.
+  ]
+  component Client [
+    **Client**
+    Each CLI command executed constructs
+    a client to send the request to
+    the server.
+  ]
+}
+
+[Client] -left-> [Server] : "Send requests to the server via HTTP"
+[Server] -down-> [API] : "POSTs events to PagerDuty via HTTPS"
+[User] -down-> [Client] : "Interacts with the server via\n""pdagent send, enqueue..."""
+[User] -down-> [Server] : "Initializes a server via\n""pdagent server"""
+@enduml
