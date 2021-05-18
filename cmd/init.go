@@ -31,12 +31,15 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init",
 		Short: "Generate a new initial configuration file.",
 		Long: `Generate a new initial configuration file
-	
+
 	Can be run without options to automatically generate defaults, or will use
 	configuration options or an existing config as its basis.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			defaults := getDefaults()
 			configFile := path.Join(defaults.ConfigPath, "config.yaml")
+			agentIdFile := path.Join(defaults.ConfigPath, "agentid.txt")
+
+			common.CreateAgentIdFile(agentIdFile)
 
 			if common.IsProduction() {
 				fmt.Printf("Generating production config to %v\n", configFile)
@@ -50,6 +53,7 @@ func NewInitCmd() *cobra.Command {
 			}
 
 			viper.SetConfigType("yaml")
+			viper.SetDefault("agentidfile", agentIdFile)
 
 			if err := viper.SafeWriteConfigAs(configFile); err != nil {
 				fmt.Printf("Error writing config: %v\n", err)
@@ -57,6 +61,7 @@ func NewInitCmd() *cobra.Command {
 			}
 
 			fmt.Printf("Config file generated to %v\n", configFile)
+
 		},
 	}
 

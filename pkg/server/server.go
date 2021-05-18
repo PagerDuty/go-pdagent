@@ -23,19 +23,27 @@ type Queue interface {
 	Status(string) ([]persistentqueue.StatusItem, error)
 }
 
+type Heartbeat interface {
+	Start(agentId string)
+	Shutdown()
+}
+
 type Server struct {
 	HTTPServer *http.Server
 	Queue      Queue
+	Heartbeat  Heartbeat
 
-	pidfile string
-	secret  string
-	logger  *zap.SugaredLogger
+	pidfile     string
+	secret      string
+	agentIdFile string
+	logger      *zap.SugaredLogger
 }
 
 type Option func(*Server)
 
-func NewServer(address, secret, pidfile string, queue Queue) *Server {
+func NewServer(address, secret, pidfile string, queue Queue, agentIdFile string) *Server {
 	logger := common.Logger.Named("Server")
+	heartbeat := NewHeartbeatTask()
 
 	server := Server{
 		HTTPServer: &http.Server{
@@ -44,10 +52,12 @@ func NewServer(address, secret, pidfile string, queue Queue) *Server {
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		},
-		Queue:   queue,
-		pidfile: pidfile,
-		secret:  secret,
-		logger:  logger,
+		Queue:       queue,
+		Heartbeat:   heartbeat,
+		pidfile:     pidfile,
+		secret:      secret,
+		logger:      logger,
+		agentIdFile: agentIdFile,
 	}
 
 	server.HTTPServer.Handler = Router(&server)
@@ -67,6 +77,8 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	s.Heartbeat.Start(s.agentIdFile)
+
 	go func() {
 		s.logger.Info(s.HTTPServer.ListenAndServe())
 	}()
@@ -85,6 +97,8 @@ func (s *Server) Start() error {
 		s.logger.Error("Error shutting down server's queue.")
 		return err
 	}
+
+	s.Heartbeat.Shutdown()
 
 	if err := common.RemovePidfile(s.pidfile); err != nil {
 		return err

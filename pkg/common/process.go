@@ -70,17 +70,6 @@ func TerminateProcess(pidfile string) error {
 	return proc.Signal(syscall.SIGTERM)
 }
 
-func fileExists(f string) (bool, error) {
-	_, err := os.Stat(f)
-	if os.IsNotExist(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	} else {
-		return true, nil
-	}
-}
-
 func getProcess(pidfile string) (*os.Process, error) {
 	pid, err := GetPid(pidfile)
 	if err != nil {
