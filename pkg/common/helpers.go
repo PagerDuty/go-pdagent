@@ -68,7 +68,7 @@ func GetAgentId(agentIdFile string) string {
 
 	agentId, err := ioutil.ReadFile(agentIdFile)
 	if err != nil {
-		fmt.Printf("Unable to get agent id.")
+		fmt.Printf("Unable to get agent id.\n")
 		return "unavailable"
 	}
 

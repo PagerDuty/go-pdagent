@@ -10,7 +10,7 @@ import (
 )
 
 const HEARTBEAT_URL = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
-const HEARTBEAT_FREQUENCY_SECONDS = 1 // Send heartbeat every hour
+const HEARTBEAT_FREQUENCY_SECONDS = 60 * 60 // Send heartbeat every hour
 const HEARTBEAT_MAX_RETRIES = 10
 const RETRY_GAP_SECONDS = 10
 
@@ -24,10 +24,11 @@ type HeartbeatTask struct {
 
 func NewHeartbeatTask() *HeartbeatTask {
 	hb := HeartbeatTask{
-		ticker:   nil,
-		shutdown: make(chan bool),
-		logger:   common.Logger.Named("Heartbeat"),
-		client:   &http.Client{},
+		ticker:      nil,
+		shutdown:    make(chan bool),
+		logger:      common.Logger.Named("Heartbeat"),
+		client:      &http.Client{},
+		agentIdFile: "",
 	}
 
 	return &hb
@@ -88,11 +89,12 @@ func (hb *HeartbeatTask) beat() {
 			hb.logger.Error("Error sending heartbeat - will retry")
 		}
 
-		if attempts < HEARTBEAT_MAX_RETRIES {
+		if attempts >= HEARTBEAT_MAX_RETRIES {
 			hb.logger.Info("Heartbeat retry limit exceeded - will not retry")
 			return
 		}
 
+		hb.logger.Info("Sleeping before retry")
 		time.Sleep(RETRY_GAP_SECONDS * time.Second)
 		hb.logger.Info("Retrying heartbeat")
 	}

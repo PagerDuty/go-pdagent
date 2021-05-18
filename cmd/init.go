@@ -61,7 +61,6 @@ func NewInitCmd() *cobra.Command {
 			}
 
 			fmt.Printf("Config file generated to %v\n", configFile)
-
 		},
 	}
 
