@@ -43,6 +43,7 @@ func (hb *HeartbeatTask) Start(agentIdFile string) {
 		for {
 			select {
 			case <-hb.shutdown:
+				hb.logger.Info("Heartbeat goroutine shutdown")
 				return
 			case <-hb.ticker.C:
 				go hb.beat()
@@ -61,6 +62,8 @@ func (hb *HeartbeatTask) beat() {
 	hb.logger.Info("Sending heartbeat")
 
 	attempts := 0
+	maxRetryTime := time.Now().Add(time.Second * HEARTBEAT_FREQUENCY_SECONDS / 2)
+
 	for {
 		attempts++
 
@@ -71,6 +74,7 @@ func (hb *HeartbeatTask) beat() {
 		}
 
 		req.Header.Add("User-Agent", userAgent(*hb))
+		req.Header.Add("Content-Type", "application/json")
 
 		httpResp, err := hb.client.Do(req)
 		if err != nil {
@@ -83,14 +87,19 @@ func (hb *HeartbeatTask) beat() {
 		if httpResp.StatusCode/100 == 2 {
 			hb.logger.Info("Heartbeat successful!")
 			return
-		}
-
-		if httpResp.StatusCode/100 == 5 {
+		} else if httpResp.StatusCode/100 == 5 {
 			hb.logger.Error("Error sending heartbeat - will retry")
+		} else {
+			hb.logger.Info("Heartbeat request returned a non-success response code - will retry")
 		}
 
 		if attempts >= HEARTBEAT_MAX_RETRIES {
 			hb.logger.Info("Heartbeat retry limit exceeded - will not retry")
+			return
+		}
+
+		if time.Now().After(maxRetryTime) {
+			hb.logger.Info("Heartbeat retry time limit exceeded - will not retry")
 			return
 		}
 
