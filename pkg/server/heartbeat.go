@@ -134,6 +134,7 @@ func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
 		hb.logger.Info("Could not decode heartbeat response body.")
 	} else {
 		hb.logger.Info("Updating heartbeat frequency to ", responseBody.HeartBeatIntervalSeconds)
+		hb.ticker.Stop()
 		hb.ticker = time.NewTicker(time.Duration(responseBody.HeartBeatIntervalSeconds) * time.Second)
 	}
 
