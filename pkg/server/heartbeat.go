@@ -69,7 +69,6 @@ func (hb *HeartbeatTask) beat() {
 	hb.logger.Info("Sending heartbeat")
 
 	attempts := 0
-	maxRetryTime := time.Now().Add(time.Second * HEARTBEAT_FREQUENCY_SECONDS / 2)
 
 	for {
 		attempts++
@@ -90,11 +89,6 @@ func (hb *HeartbeatTask) beat() {
 
 		if attempts >= HEARTBEAT_MAX_RETRIES {
 			hb.logger.Info("Heartbeat retry limit exceeded - will not retry")
-			return
-		}
-
-		if time.Now().After(maxRetryTime) {
-			hb.logger.Info("Heartbeat retry time limit exceeded - will not retry")
 			return
 		}
 
