@@ -53,11 +53,10 @@ func runServerCommand() error {
 	database := viper.GetString("database")
 	pidfile := viper.GetString("pidfile")
 	secret := viper.GetString("secret")
-	agentIdFile := viper.GetString("agentidfile")
 
 	queue := persistentqueue.NewPersistentQueue(persistentqueue.WithFile(database))
 
-	server := server.NewServer(address, secret, pidfile, queue, agentIdFile)
+	server := server.NewServer(address, secret, pidfile, queue)
 	err := server.Start()
 	if err != nil {
 		fmt.Println(err)

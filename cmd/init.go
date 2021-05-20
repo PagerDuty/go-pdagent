@@ -37,9 +37,6 @@ func NewInitCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			defaults := getDefaults()
 			configFile := path.Join(defaults.ConfigPath, "config.yaml")
-			agentIdFile := path.Join(defaults.ConfigPath, "agentid.txt")
-
-			common.CreateAgentIdFile(agentIdFile)
 
 			if common.IsProduction() {
 				fmt.Printf("Generating production config to %v\n", configFile)
@@ -53,7 +50,6 @@ func NewInitCmd() *cobra.Command {
 			}
 
 			viper.SetConfigType("yaml")
-			viper.SetDefault("agentidfile", agentIdFile)
 
 			if err := viper.SafeWriteConfigAs(configFile); err != nil {
 				fmt.Printf("Error writing config: %v\n", err)

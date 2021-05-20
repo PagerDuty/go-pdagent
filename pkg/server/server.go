@@ -24,7 +24,7 @@ type Queue interface {
 }
 
 type Heartbeat interface {
-	Start(agentId string)
+	Start()
 	Shutdown()
 }
 
@@ -33,15 +33,14 @@ type Server struct {
 	Queue      Queue
 	Heartbeat  Heartbeat
 
-	pidfile     string
-	secret      string
-	agentIdFile string
-	logger      *zap.SugaredLogger
+	pidfile string
+	secret  string
+	logger  *zap.SugaredLogger
 }
 
 type Option func(*Server)
 
-func NewServer(address, secret, pidfile string, queue Queue, agentIdFile string) *Server {
+func NewServer(address, secret, pidfile string, queue Queue) *Server {
 	logger := common.Logger.Named("Server")
 	heartbeat := NewHeartbeatTask()
 
@@ -52,12 +51,11 @@ func NewServer(address, secret, pidfile string, queue Queue, agentIdFile string)
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		},
-		Queue:       queue,
-		Heartbeat:   heartbeat,
-		pidfile:     pidfile,
-		secret:      secret,
-		logger:      logger,
-		agentIdFile: agentIdFile,
+		Queue:     queue,
+		Heartbeat: heartbeat,
+		pidfile:   pidfile,
+		secret:    secret,
+		logger:    logger,
 	}
 
 	server.HTTPServer.Handler = Router(&server)
@@ -77,7 +75,7 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	s.Heartbeat.Start(s.agentIdFile)
+	s.Heartbeat.Start()
 
 	go func() {
 		s.logger.Info(s.HTTPServer.ListenAndServe())

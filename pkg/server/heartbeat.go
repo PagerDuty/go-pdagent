@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -17,11 +18,11 @@ const HEARTBEAT_MAX_RETRIES = 10
 const RETRY_GAP_SECONDS = 10
 
 type HeartbeatTask struct {
+	heartbeatId        string
 	ticker             *time.Ticker
 	shutdown           chan bool
 	logger             *zap.SugaredLogger
 	client             *http.Client
-	agentIdFile        string
 	heartbeatFrequency int
 }
 
@@ -31,21 +32,20 @@ type HeartbeatResponseBody struct {
 
 func NewHeartbeatTask() *HeartbeatTask {
 	hb := HeartbeatTask{
+		heartbeatId:        uuid.NewString(),
 		ticker:             nil,
 		shutdown:           make(chan bool),
 		logger:             common.Logger.Named("Heartbeat"),
 		client:             &http.Client{},
-		agentIdFile:        "",
 		heartbeatFrequency: HEARTBEAT_FREQUENCY_SECONDS,
 	}
 
 	return &hb
 }
 
-func (hb *HeartbeatTask) Start(agentIdFile string) {
+func (hb *HeartbeatTask) Start() {
 	hb.logger.Info("Starting heartbeat")
 	hb.ticker = time.NewTicker(time.Duration(hb.heartbeatFrequency) * time.Second)
-	hb.agentIdFile = agentIdFile
 
 	go func() {
 		for {
@@ -135,9 +135,8 @@ func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
 	return httpResp.StatusCode, false
 }
 
-func userAgent(heartbeat HeartbeatTask) string {
+func userAgent(hb HeartbeatTask) string {
 	version := common.Version
-	agentId := common.GetAgentId(heartbeat.agentIdFile)
 
-	return fmt.Sprintf("go-pdagent/%v (Agent ID: %s)", version, agentId)
+	return fmt.Sprintf("go-pdagent/%v (Heartbeat ID: %s)", version, hb.heartbeatId)
 }
