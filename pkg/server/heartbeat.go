@@ -18,12 +18,12 @@ const maxRetries = 10
 const retryGapSeconds = 10
 
 type HeartbeatTask struct {
-	heartbeatId        string
-	ticker             *time.Ticker
-	shutdown           chan bool
-	logger             *zap.SugaredLogger
-	client             *http.Client
-	heartbeatFrequency int
+	heartbeatId string
+	ticker      *time.Ticker
+	shutdown    chan bool
+	logger      *zap.SugaredLogger
+	client      *http.Client
+	frequency   int
 }
 
 type HeartbeatResponseBody struct {
@@ -32,12 +32,12 @@ type HeartbeatResponseBody struct {
 
 func NewHeartbeatTask() *HeartbeatTask {
 	hb := HeartbeatTask{
-		heartbeatId:        uuid.NewString(),
-		ticker:             nil,
-		shutdown:           make(chan bool),
-		logger:             common.Logger.Named("Heartbeat"),
-		client:             &http.Client{},
-		heartbeatFrequency: frequencySeconds,
+		heartbeatId: uuid.NewString(),
+		ticker:      nil,
+		shutdown:    make(chan bool),
+		logger:      common.Logger.Named("Heartbeat"),
+		client:      &http.Client{},
+		frequency:   frequencySeconds,
 	}
 
 	return &hb
@@ -45,7 +45,7 @@ func NewHeartbeatTask() *HeartbeatTask {
 
 func (hb *HeartbeatTask) Start() {
 	hb.logger.Info("Starting heartbeat")
-	hb.ticker = time.NewTicker(time.Duration(hb.heartbeatFrequency) * time.Second)
+	hb.ticker = time.NewTicker(time.Duration(hb.frequency) * time.Second)
 
 	go func() {
 		for {
