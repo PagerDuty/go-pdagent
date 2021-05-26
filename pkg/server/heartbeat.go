@@ -106,7 +106,7 @@ func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
 	}
 
 	req.Header.Add("User-Agent", userAgent(*hb))
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 
 	httpResp, err := hb.client.Do(req)
 	if err != nil {
