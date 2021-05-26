@@ -18,12 +18,12 @@ const maxRetries = 10
 const retryGapSeconds = 10
 
 type HeartbeatTask struct {
-	heartbeatId string
-	ticker      *time.Ticker
-	shutdown    chan bool
-	logger      *zap.SugaredLogger
-	client      *http.Client
-	frequency   int
+	id        string
+	ticker    *time.Ticker
+	shutdown  chan bool
+	logger    *zap.SugaredLogger
+	client    *http.Client
+	frequency int
 }
 
 type HeartbeatResponseBody struct {
@@ -32,12 +32,12 @@ type HeartbeatResponseBody struct {
 
 func NewHeartbeatTask() *HeartbeatTask {
 	hb := HeartbeatTask{
-		heartbeatId: uuid.NewString(),
-		ticker:      nil,
-		shutdown:    make(chan bool),
-		logger:      common.Logger.Named("Heartbeat"),
-		client:      &http.Client{},
-		frequency:   frequencySeconds,
+		id:        uuid.NewString(),
+		ticker:    nil,
+		shutdown:  make(chan bool),
+		logger:    common.Logger.Named("Heartbeat"),
+		client:    &http.Client{},
+		frequency: frequencySeconds,
 	}
 
 	return &hb
@@ -138,5 +138,5 @@ func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
 func userAgent(hb HeartbeatTask) string {
 	version := common.Version
 
-	return fmt.Sprintf("go-pdagent/%v (Heartbeat ID: %s)", version, hb.heartbeatId)
+	return fmt.Sprintf("go-pdagent/%v (Agent ID: %s)", version, hb.id)
 }
