@@ -80,6 +80,7 @@ func (hb *heartbeat) beat() {
 
 		statusCode, isError := hb.makeHeartbeatRequest()
 		if isError {
+			hb.logger.Error("Failed to send heartbeat request - will not retry")
 			return
 		}
 
@@ -106,7 +107,6 @@ func (hb *heartbeat) beat() {
 func (hb *heartbeat) makeHeartbeatRequest() (int, bool) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		hb.logger.Error("Failed to create heartbeat request - will not retry")
 		return 0, true
 	}
 
@@ -115,7 +115,6 @@ func (hb *heartbeat) makeHeartbeatRequest() (int, bool) {
 
 	httpResp, err := hb.client.Do(req)
 	if err != nil {
-		hb.logger.Error("Failed to send heartbeat request - will not retry")
 		return 0, true
 	}
 
