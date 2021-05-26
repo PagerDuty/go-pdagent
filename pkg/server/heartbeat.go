@@ -12,10 +12,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const HEARTBEAT_URL = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
-const HEARTBEAT_FREQUENCY_SECONDS = 60 * 60 // Send heartbeat every hour
-const HEARTBEAT_MAX_RETRIES = 10
-const RETRY_GAP_SECONDS = 10
+const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
+const frequencySeconds = 60 * 60 // Send heartbeat every hour
+const maxRetries = 10
+const retryGapSeconds = 10
 
 type HeartbeatTask struct {
 	heartbeatId        string
@@ -37,7 +37,7 @@ func NewHeartbeatTask() *HeartbeatTask {
 		shutdown:           make(chan bool),
 		logger:             common.Logger.Named("Heartbeat"),
 		client:             &http.Client{},
-		heartbeatFrequency: HEARTBEAT_FREQUENCY_SECONDS,
+		heartbeatFrequency: frequencySeconds,
 	}
 
 	return &hb
@@ -87,19 +87,19 @@ func (hb *HeartbeatTask) beat() {
 			hb.logger.Info("Heartbeat request returned a non-success response code - will retry")
 		}
 
-		if attempts >= HEARTBEAT_MAX_RETRIES {
+		if attempts >= maxRetries {
 			hb.logger.Info("Heartbeat retry limit exceeded - will not retry")
 			return
 		}
 
 		hb.logger.Info("Sleeping before retry")
-		time.Sleep(RETRY_GAP_SECONDS * time.Second)
+		time.Sleep(retryGapSeconds * time.Second)
 		hb.logger.Info("Retrying heartbeat")
 	}
 }
 
 func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
-	req, err := http.NewRequest("GET", HEARTBEAT_URL, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		hb.logger.Error("Failed to create heartbeat request - will not retry")
 		return 0, true
