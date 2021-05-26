@@ -17,7 +17,12 @@ const frequencySeconds = 60 * 60 // Send heartbeat every hour
 const maxRetries = 10
 const retryGapSeconds = 10
 
-type HeartbeatTask struct {
+type Heartbeat interface {
+	Start()
+	Shutdown()
+}
+
+type heartbeat struct {
 	id        string
 	ticker    *time.Ticker
 	shutdown  chan bool
@@ -30,8 +35,8 @@ type HeartbeatResponseBody struct {
 	HeartBeatIntervalSeconds int `json:"heartbeat_interval_secs"`
 }
 
-func NewHeartbeatTask() *HeartbeatTask {
-	hb := HeartbeatTask{
+func NewHeartbeat() *heartbeat {
+	hb := heartbeat{
 		id:        uuid.NewString(),
 		ticker:    nil,
 		shutdown:  make(chan bool),
@@ -43,7 +48,7 @@ func NewHeartbeatTask() *HeartbeatTask {
 	return &hb
 }
 
-func (hb *HeartbeatTask) Start() {
+func (hb *heartbeat) Start() {
 	hb.logger.Info("Starting heartbeat")
 	hb.ticker = time.NewTicker(time.Duration(hb.frequency) * time.Second)
 
@@ -59,13 +64,13 @@ func (hb *HeartbeatTask) Start() {
 	}()
 }
 
-func (hb *HeartbeatTask) Shutdown() {
+func (hb *heartbeat) Shutdown() {
 	hb.ticker.Stop()
 	hb.shutdown <- true
 	hb.logger.Info("Heartbeat stopped")
 }
 
-func (hb *HeartbeatTask) beat() {
+func (hb *heartbeat) beat() {
 	hb.logger.Info("Sending heartbeat")
 
 	attempts := 0
@@ -98,7 +103,7 @@ func (hb *HeartbeatTask) beat() {
 	}
 }
 
-func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
+func (hb *heartbeat) makeHeartbeatRequest() (int, bool) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		hb.logger.Error("Failed to create heartbeat request - will not retry")
@@ -135,7 +140,7 @@ func (hb *HeartbeatTask) makeHeartbeatRequest() (int, bool) {
 	return httpResp.StatusCode, false
 }
 
-func userAgent(hb HeartbeatTask) string {
+func userAgent(hb heartbeat) string {
 	version := common.Version
 
 	return fmt.Sprintf("go-pdagent/%v (Agent ID: %s)", version, hb.id)

@@ -23,11 +23,6 @@ type Queue interface {
 	Status(string) ([]persistentqueue.StatusItem, error)
 }
 
-type Heartbeat interface {
-	Start()
-	Shutdown()
-}
-
 type Server struct {
 	HTTPServer *http.Server
 	Queue      Queue
@@ -42,7 +37,7 @@ type Option func(*Server)
 
 func NewServer(address, secret, pidfile string, queue Queue) *Server {
 	logger := common.Logger.Named("Server")
-	heartbeat := NewHeartbeatTask()
+	heartbeat := NewHeartbeat()
 
 	server := Server{
 		HTTPServer: &http.Server{
