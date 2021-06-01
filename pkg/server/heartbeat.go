@@ -2,13 +2,11 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +21,6 @@ type Heartbeat interface {
 }
 
 type heartbeat struct {
-	id        string
 	ticker    *time.Ticker
 	shutdown  chan bool
 	logger    *zap.SugaredLogger
@@ -37,7 +34,6 @@ type HeartbeatResponseBody struct {
 
 func NewHeartbeat() Heartbeat {
 	hb := heartbeat{
-		id:        uuid.NewString(),
 		ticker:    nil,
 		shutdown:  make(chan bool),
 		logger:    common.Logger.Named("Heartbeat"),
@@ -105,7 +101,7 @@ func (hb *heartbeat) makeHeartbeatRequest() (int, error) {
 		return 0, err
 	}
 
-	req.Header.Add("User-Agent", userAgent(*hb))
+	req.Header.Add("User-Agent", common.UserAgent())
 	req.Header.Add("Accept", "application/json")
 
 	httpResp, err := hb.client.Do(req)
@@ -132,10 +128,4 @@ func (hb *heartbeat) makeHeartbeatRequest() (int, error) {
 	hb.ticker = time.NewTicker(time.Duration(responseBody.HeartBeatIntervalSeconds) * time.Second)
 
 	return httpResp.StatusCode, nil
-}
-
-func userAgent(hb heartbeat) string {
-	version := common.Version
-
-	return fmt.Sprintf("go-pdagent/%v (Agent ID: %s)", version, hb.id)
 }
