@@ -14,8 +14,8 @@ import (
 
 const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
-const maxRetries = 10
-const retryGapSeconds = 10
+const maxRetries = 3
+const retryGapSeconds = 15
 
 type Heartbeat interface {
 	Start()
@@ -35,7 +35,7 @@ type HeartbeatResponseBody struct {
 	HeartBeatIntervalSeconds int `json:"heartbeat_interval_secs"`
 }
 
-func NewHeartbeat() *heartbeat {
+func NewHeartbeat() Heartbeat {
 	hb := heartbeat{
 		id:        uuid.NewString(),
 		ticker:    nil,
@@ -49,7 +49,7 @@ func NewHeartbeat() *heartbeat {
 }
 
 func (hb *heartbeat) Start() {
-	hb.logger.Info("Starting heartbeat")
+	hb.logger.Info("Starting heartbeat.")
 	hb.ticker = time.NewTicker(time.Duration(hb.frequency) * time.Second)
 
 	go func() {
@@ -67,7 +67,7 @@ func (hb *heartbeat) Start() {
 func (hb *heartbeat) Shutdown() {
 	hb.ticker.Stop()
 	hb.shutdown <- true
-	hb.logger.Info("Heartbeat stopped")
+	hb.logger.Info("Heartbeat stopped.")
 }
 
 func (hb *heartbeat) beat() {
@@ -78,23 +78,18 @@ func (hb *heartbeat) beat() {
 	for {
 		attempts++
 
-		statusCode, isError := hb.makeHeartbeatRequest()
-		if isError {
-			hb.logger.Error("Failed to send heartbeat request - will not retry")
+		statusCode, err := hb.makeHeartbeatRequest()
+		if err != nil {
+			hb.logger.Warnf("Failed to send heartbeat request - will retry. Error: ", err)
+		} else if statusCode/100 == 2 {
+			hb.logger.Info("Heartbeat successful")
 			return
-		}
-
-		if statusCode/100 == 2 {
-			hb.logger.Info("Heartbeat successful!")
-			return
-		} else if statusCode/100 == 5 {
-			hb.logger.Error("Error sending heartbeat - will retry")
 		} else {
-			hb.logger.Info("Heartbeat request returned a non-success response code - will retry")
+			hb.logger.Warnf("Heartbeat request returned a non-success response code: %s", statusCode)
 		}
 
 		if attempts >= maxRetries {
-			hb.logger.Info("Heartbeat retry limit exceeded - will not retry")
+			hb.logger.Warn("Heartbeat retry limit exceeded")
 			return
 		}
 
@@ -104,10 +99,10 @@ func (hb *heartbeat) beat() {
 	}
 }
 
-func (hb *heartbeat) makeHeartbeatRequest() (int, bool) {
+func (hb *heartbeat) makeHeartbeatRequest() (int, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return 0, true
+		return 0, err
 	}
 
 	req.Header.Add("User-Agent", userAgent(*hb))
@@ -115,28 +110,28 @@ func (hb *heartbeat) makeHeartbeatRequest() (int, bool) {
 
 	httpResp, err := hb.client.Do(req)
 	if err != nil {
-		return 0, true
+		return 0, err
 	}
 
 	defer httpResp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		hb.logger.Info("Could not read response from heartbeat request.")
+		return 0, err
 	}
 
 	var responseBody HeartbeatResponseBody
 
 	err = json.Unmarshal(respBody, &responseBody)
 	if err != nil {
-		hb.logger.Info("Could not decode heartbeat response body.")
-	} else {
-		hb.logger.Info("Updating heartbeat frequency to ", responseBody.HeartBeatIntervalSeconds)
-		hb.ticker.Stop()
-		hb.ticker = time.NewTicker(time.Duration(responseBody.HeartBeatIntervalSeconds) * time.Second)
+		return 0, err
 	}
 
-	return httpResp.StatusCode, false
+	hb.logger.Info("Updating heartbeat frequency to ", responseBody.HeartBeatIntervalSeconds)
+	hb.ticker.Stop()
+	hb.ticker = time.NewTicker(time.Duration(responseBody.HeartBeatIntervalSeconds) * time.Second)
+
+	return httpResp.StatusCode, nil
 }
 
 func userAgent(hb heartbeat) string {
