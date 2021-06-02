@@ -56,7 +56,7 @@ var defaultUserAgent string
 
 func init() {
 	DefaultHTTPClient = &http.Client{
-		Transport: NewRetryTransport(),
+		Transport: common.NewRetryTransport(),
 		Timeout:   5 * time.Minute,
 	}
 
@@ -123,7 +123,7 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	_ = json.Unmarshal(respBody, &response)
-	if isSuccess(httpResp, err) {
+	if common.IsSuccessResponse(httpResp, err) {
 		return nil
 	}
 

@@ -1,4 +1,4 @@
-package eventsapi
+package common
 
 import (
 	"math"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 )
@@ -45,9 +44,8 @@ func NewRetryTransport() RetryTransport {
 
 		Backoff:     calculateBackoff,
 		IsRetryable: isRetryable,
-		IsSuccess:   isSuccess,
-
-		log: common.Logger.Named("RetryTransport"),
+		IsSuccess:   IsSuccessResponse,
+		log:         Logger.Named("RetryTransport"),
 	}
 }
 
@@ -137,11 +135,11 @@ func isRetryable(resp *http.Response, err error) bool {
 	return resp.StatusCode == 429 || resp.StatusCode/100 == 5
 }
 
-// isSuccess returns true if the corresponding request was successful.
+// isSuccessResponse returns true if the corresponding request was successful.
 //
 // Per documentation this is when the server responds with a 202, but we treat
 // any 2XX as a success.
-func isSuccess(resp *http.Response, err error) bool {
+func IsSuccessResponse(resp *http.Response, err error) bool {
 	if err != nil || resp == nil {
 		return false
 	}
