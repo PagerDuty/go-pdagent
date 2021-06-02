@@ -12,8 +12,6 @@ import (
 
 const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
-const maxRetries = 3
-const retryGapSeconds = 15
 
 type Heartbeat interface {
 	Start()
@@ -34,10 +32,13 @@ type HeartbeatResponseBody struct {
 
 func NewHeartbeat() Heartbeat {
 	hb := heartbeat{
-		ticker:    nil,
-		shutdown:  make(chan bool),
-		logger:    common.Logger.Named("Heartbeat"),
-		client:    &http.Client{},
+		ticker:   nil,
+		shutdown: make(chan bool),
+		logger:   common.Logger.Named("Heartbeat"),
+		client: &http.Client{
+			Transport: common.NewRetryTransport(),
+			Timeout:   1 * time.Minute,
+		},
 		frequency: frequencySeconds,
 	}
 
@@ -69,29 +70,15 @@ func (hb *heartbeat) Shutdown() {
 func (hb *heartbeat) beat() {
 	hb.logger.Info("Sending heartbeat")
 
-	attempts := 0
+	statusCode, err := hb.makeHeartbeatRequest()
+	if statusCode/100 == 2 {
+		hb.logger.Info("Heartbeat sent successful")
+	} else {
+		hb.logger.Warnf("Heartbeat request returned a non-success response code: %s", statusCode)
+	}
 
-	for {
-		attempts++
-
-		statusCode, err := hb.makeHeartbeatRequest()
-		if err != nil {
-			hb.logger.Warnf("Failed to send heartbeat request - will retry. Error: ", err)
-		} else if statusCode/100 == 2 {
-			hb.logger.Info("Heartbeat successful")
-			return
-		} else {
-			hb.logger.Warnf("Heartbeat request returned a non-success response code: %s", statusCode)
-		}
-
-		if attempts >= maxRetries {
-			hb.logger.Warn("Heartbeat retry limit exceeded")
-			return
-		}
-
-		hb.logger.Info("Sleeping before retry")
-		time.Sleep(retryGapSeconds * time.Second)
-		hb.logger.Info("Retrying heartbeat")
+	if err != nil {
+		hb.logger.Warnf("An error occurred while sending heartbeat: ", err)
 	}
 }
 
