@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -12,6 +13,8 @@ import (
 
 const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
+
+var ErrHeartbeatError = errors.New("an error was encountered while sending the heartbeat")
 
 type Heartbeat interface {
 	Start()
@@ -70,49 +73,44 @@ func (hb *heartbeat) Shutdown() {
 func (hb *heartbeat) beat() {
 	hb.logger.Info("Sending heartbeat")
 
-	statusCode, err := hb.makeHeartbeatRequest()
-	if statusCode/100 == 2 {
-		hb.logger.Info("Heartbeat successful")
-	} else {
-		hb.logger.Warnf("Heartbeat request returned a non-success response code: %s", statusCode)
-	}
-
+	heartbeatResponse, err := hb.doHeartbeatRequest()
 	if err != nil {
 		hb.logger.Warnf("An error occurred while sending heartbeat: ", err)
+		return
 	}
+
+	hb.logger.Info("Heartbeat successful")
+
+	hb.logger.Info("Updating heartbeat frequency to ", heartbeatResponse.HeartBeatIntervalSeconds)
+	hb.ticker.Stop()
+	hb.ticker = time.NewTicker(time.Duration(heartbeatResponse.HeartBeatIntervalSeconds) * time.Second)
 }
 
-func (hb *heartbeat) makeHeartbeatRequest() (int, error) {
+func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	req.Header.Add("User-Agent", common.UserAgent())
 	req.Header.Add("Accept", "application/json")
 
 	httpResp, err := hb.client.Do(req)
-	if err != nil {
-		return 0, err
+	if !common.IsSuccessResponse(httpResp, err) {
+		return nil, ErrHeartbeatError
 	}
 
 	defer httpResp.Body.Close()
-
 	respBody, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	var responseBody heartbeatResponseBody
-
 	err = json.Unmarshal(respBody, &responseBody)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	hb.logger.Info("Updating heartbeat frequency to ", responseBody.HeartBeatIntervalSeconds)
-	hb.ticker.Stop()
-	hb.ticker = time.NewTicker(time.Duration(responseBody.HeartBeatIntervalSeconds) * time.Second)
-
-	return httpResp.StatusCode, nil
+	return &responseBody, nil
 }
