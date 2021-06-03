@@ -135,7 +135,7 @@ func isRetryable(resp *http.Response, err error) bool {
 	return resp.StatusCode == 429 || resp.StatusCode/100 == 5
 }
 
-// isSuccessResponse returns true if the corresponding request was successful.
+// IsSuccessResponse returns true if the corresponding request was successful.
 //
 // Per documentation this is when the server responds with a 202, but we treat
 // any 2XX as a success.

@@ -26,7 +26,7 @@ type heartbeat struct {
 	frequency int
 }
 
-type HeartbeatResponseBody struct {
+type heartbeatResponseBody struct {
 	HeartBeatIntervalSeconds int `json:"heartbeat_interval_secs"`
 }
 
@@ -37,7 +37,7 @@ func NewHeartbeat() Heartbeat {
 		logger:   common.Logger.Named("Heartbeat"),
 		client: &http.Client{
 			Transport: common.NewRetryTransport(),
-			Timeout:   1 * time.Minute,
+			Timeout:   30 * time.Second,
 		},
 		frequency: frequencySeconds,
 	}
@@ -72,7 +72,7 @@ func (hb *heartbeat) beat() {
 
 	statusCode, err := hb.makeHeartbeatRequest()
 	if statusCode/100 == 2 {
-		hb.logger.Info("Heartbeat sent successful")
+		hb.logger.Info("Heartbeat successful")
 	} else {
 		hb.logger.Warnf("Heartbeat request returned a non-success response code: %s", statusCode)
 	}
@@ -103,7 +103,7 @@ func (hb *heartbeat) makeHeartbeatRequest() (int, error) {
 		return 0, err
 	}
 
-	var responseBody HeartbeatResponseBody
+	var responseBody heartbeatResponseBody
 
 	err = json.Unmarshal(respBody, &responseBody)
 	if err != nil {
