@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/http2"
 )
 
-const DefaultTransportMaxInterval = 30 * time.Second
-const DefaultTransportMaxRetries = 10
+const defaultMaxInterval = 30 * time.Second
+const defaultMaxRetries = 10
 
 // RetryTransport provides automatic retry support as an `http.RoundTripper`.
 //
@@ -38,10 +38,10 @@ type RetryTransport struct {
 	log *zap.SugaredLogger
 }
 
-func NewRetryTransport(maxRetries int, maxInterval time.Duration) RetryTransport {
+func NewRetryTransport() RetryTransport {
 	return RetryTransport{
-		MaxRetries:  maxRetries,
-		MaxInterval: maxInterval,
+		MaxRetries:  defaultMaxRetries,
+		MaxInterval: defaultMaxInterval,
 		Transport:   http.DefaultTransport,
 
 		Backoff:     calculateBackoff,

@@ -36,12 +36,16 @@ type heartbeatResponseBody struct {
 }
 
 func NewHeartbeat() Heartbeat {
+	transport := common.NewRetryTransport()
+	transport.MaxRetries = maxRetries
+	transport.MaxInterval = maxRetryInterval
+
 	hb := heartbeat{
 		ticker:   nil,
 		shutdown: make(chan bool),
 		logger:   common.Logger.Named("Heartbeat"),
 		client: &http.Client{
-			Transport: common.NewRetryTransport(maxRetries, maxRetryInterval),
+			Transport: transport,
 			Timeout:   20 * time.Second,
 		},
 		frequency: frequencySeconds,
