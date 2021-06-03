@@ -10,8 +10,8 @@ import (
 	"golang.org/x/net/http2"
 )
 
-const defaultMaxInterval = 30 * time.Second
-const defaultMaxRetries = 10
+const DefaultTransportMaxInterval = 30 * time.Second
+const DefaultTransportMaxRetries = 10
 
 // RetryTransport provides automatic retry support as an `http.RoundTripper`.
 //
@@ -29,18 +29,20 @@ const defaultMaxRetries = 10
 //
 type RetryTransport struct {
 	MaxRetries  int
+	MaxInterval time.Duration
 	Transport   http.RoundTripper
-	Backoff     func(int) time.Duration
+	Backoff     func(int, time.Duration) time.Duration
 	IsRetryable func(*http.Response, error) bool
 	IsSuccess   func(*http.Response, error) bool
 
 	log *zap.SugaredLogger
 }
 
-func NewRetryTransport() RetryTransport {
+func NewRetryTransport(maxRetries int, maxInterval time.Duration) RetryTransport {
 	return RetryTransport{
-		MaxRetries: defaultMaxRetries,
-		Transport:  http.DefaultTransport,
+		MaxRetries:  maxRetries,
+		MaxInterval: maxInterval,
+		Transport:   http.DefaultTransport,
 
 		Backoff:     calculateBackoff,
 		IsRetryable: isRetryable,
@@ -71,7 +73,7 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		backoff := r.Backoff(tries)
+		backoff := r.Backoff(tries, r.MaxInterval)
 		sleep := time.After(backoff)
 		r.log.Infof("Retrying job, attempt %v, delay %v", tries+1, backoff)
 
@@ -100,10 +102,10 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 //
 // Currently back-off looks like: 1s, 2s, 4s, 8s, 16s, then capping at
 // MaxRetryTimeout.
-func calculateBackoff(try int) time.Duration {
+func calculateBackoff(try int, maxInterval time.Duration) time.Duration {
 	duration := time.Duration(math.Pow(2, float64(try))) * time.Second
-	if duration > defaultMaxInterval {
-		duration = defaultMaxInterval
+	if duration > maxInterval {
+		duration = maxInterval
 	}
 	return duration
 }

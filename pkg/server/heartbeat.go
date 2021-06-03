@@ -13,6 +13,8 @@ import (
 
 const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
+const maxRetries = 3
+const maxRetryInterval = 15 * time.Second
 
 var ErrHeartbeatError = errors.New("an error was encountered while sending the heartbeat")
 
@@ -39,8 +41,8 @@ func NewHeartbeat() Heartbeat {
 		shutdown: make(chan bool),
 		logger:   common.Logger.Named("Heartbeat"),
 		client: &http.Client{
-			Transport: common.NewRetryTransport(),
-			Timeout:   30 * time.Second,
+			Transport: common.NewRetryTransport(maxRetries, maxRetryInterval),
+			Timeout:   20 * time.Second,
 		},
 		frequency: frequencySeconds,
 	}

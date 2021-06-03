@@ -24,9 +24,9 @@ func TestRetryTransportSuccess(t *testing.T) {
 		Reply(200).
 		JSON("reply")
 
-	transport := NewRetryTransport()
+	transport := NewRetryTransport(DefaultTransportMaxRetries, DefaultTransportMaxInterval)
 	transport.Transport = gock.NewTransport()
-	transport.Backoff = func(_ int) time.Duration { return time.Millisecond }
+	transport.Backoff = func(_ int, _ time.Duration) time.Duration { return time.Millisecond }
 
 	client := &http.Client{
 		Transport: transport,
@@ -48,13 +48,13 @@ func TestRetryTransportLimited(t *testing.T) {
 
 	// Respond twice with 429s, which should be retryable.
 	gock.New("https://events.pagerduty.com").
-		Times(defaultMaxRetries).
+		Times(DefaultTransportMaxRetries).
 		Post("/test").
 		Reply(429)
 
-	transport := NewRetryTransport()
+	transport := NewRetryTransport(DefaultTransportMaxRetries, DefaultTransportMaxInterval)
 	transport.Transport = gock.NewTransport()
-	transport.Backoff = func(_ int) time.Duration { return time.Millisecond }
+	transport.Backoff = func(_ int, _ time.Duration) time.Duration { return time.Millisecond }
 
 	client := &http.Client{
 		Transport: transport,

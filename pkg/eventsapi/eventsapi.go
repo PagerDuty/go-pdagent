@@ -56,7 +56,7 @@ var defaultUserAgent string
 
 func init() {
 	DefaultHTTPClient = &http.Client{
-		Transport: common.NewRetryTransport(),
+		Transport: common.NewRetryTransport(common.DefaultTransportMaxRetries, common.DefaultTransportMaxInterval),
 		Timeout:   5 * time.Minute,
 	}
 
