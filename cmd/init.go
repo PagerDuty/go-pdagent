@@ -31,7 +31,7 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init",
 		Short: "Generate a new initial configuration file.",
 		Long: `Generate a new initial configuration file
-	
+
 	Can be run without options to automatically generate defaults, or will use
 	configuration options or an existing config as its basis.`,
 		Run: func(cmd *cobra.Command, args []string) {

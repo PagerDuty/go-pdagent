@@ -5,10 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"runtime"
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
@@ -58,7 +56,7 @@ var defaultUserAgent string
 
 func init() {
 	DefaultHTTPClient = &http.Client{
-		Transport: NewRetryTransport(),
+		Transport: common.NewRetryTransport(),
 		Timeout:   5 * time.Minute,
 	}
 
@@ -66,7 +64,7 @@ func init() {
 		HTTPClient: DefaultHTTPClient,
 	}
 
-	defaultUserAgent = userAgent()
+	defaultUserAgent = common.UserAgent()
 }
 
 type EnqueueOption func(*enqueueConfig)
@@ -125,20 +123,11 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	}
 
 	_ = json.Unmarshal(respBody, &response)
-	if isSuccess(httpResp, err) {
+	if common.IsSuccessResponse(httpResp, err) {
 		return nil
 	}
 
 	return ErrAPIError
-}
-
-func userAgent() string {
-	version := common.Version
-	system := runtime.GOOS
-	commit := common.Commit
-	date := common.Date
-
-	return fmt.Sprintf("go-pdagent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
 }
 
 func validateRoutingKey(routingKey string) error {

@@ -1,7 +1,9 @@
 package common
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -26,4 +28,13 @@ func init() {
 
 func IsProduction() bool {
 	return os.Getenv("APP_ENV") == "production"
+}
+
+func UserAgent() string {
+	version := Version
+	system := runtime.GOOS
+	commit := Commit
+	date := Date
+
+	return fmt.Sprintf("go-pdagent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
 }

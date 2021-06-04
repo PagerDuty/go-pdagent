@@ -1,24 +1,13 @@
-package eventsapi
+package common
 
 import (
 	"bytes"
-	"gopkg.in/h2non/gock.v1"
 	"net/http"
 	"testing"
 	"time"
-)
 
-func mockEventV2(key string) EventV2 {
-	return EventV2{
-		RoutingKey:  key,
-		EventAction: "trigger",
-		Payload: PayloadV2{
-			Summary:  "Test summary",
-			Source:   "Test source",
-			Severity: "Error",
-		},
-	}
-}
+	"gopkg.in/h2non/gock.v1"
+)
 
 func TestRetryTransportSuccess(t *testing.T) {
 	defer gock.Off()
@@ -26,29 +15,25 @@ func TestRetryTransportSuccess(t *testing.T) {
 	// Respond twice with 429s, which should be retryable.
 	gock.New("https://events.pagerduty.com").
 		Times(2).
-		Post("/v2/enqueue").
+		Post("/test").
 		Reply(429)
 
 	// Then response with a 200, which should trigger success.
 	gock.New("https://events.pagerduty.com").
-		Post("/v2/enqueue").
+		Post("/test").
 		Reply(200).
-		JSON(ResponseV2{
-			Status:   "success",
-			Message:  "Event processed",
-			DedupKey: "12345",
-		})
+		JSON("reply")
 
 	transport := NewRetryTransport()
 	transport.Transport = gock.NewTransport()
-	transport.Backoff = func(_ int) time.Duration { return time.Millisecond }
+	transport.Backoff = func(_ int, _ time.Duration) time.Duration { return time.Millisecond }
 
 	client := &http.Client{
 		Transport: transport,
 		Timeout:   10 * time.Second,
 	}
 
-	resp, err := client.Post("https://events.pagerduty.com/v2/enqueue", "application/json", bytes.NewBuffer([]byte("Hello")))
+	resp, err := client.Post("https://events.pagerduty.com/test", "application/json", bytes.NewBuffer([]byte("Hello")))
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -64,19 +49,19 @@ func TestRetryTransportLimited(t *testing.T) {
 	// Respond twice with 429s, which should be retryable.
 	gock.New("https://events.pagerduty.com").
 		Times(defaultMaxRetries).
-		Post("/v2/enqueue").
+		Post("/test").
 		Reply(429)
 
 	transport := NewRetryTransport()
 	transport.Transport = gock.NewTransport()
-	transport.Backoff = func(_ int) time.Duration { return time.Millisecond }
+	transport.Backoff = func(_ int, _ time.Duration) time.Duration { return time.Millisecond }
 
 	client := &http.Client{
 		Transport: transport,
 		Timeout:   10 * time.Second,
 	}
 
-	resp, err := client.Post("https://events.pagerduty.com/v2/enqueue", "application/json", bytes.NewBuffer([]byte("Hello")))
+	resp, err := client.Post("https://events.pagerduty.com/test", "application/json", bytes.NewBuffer([]byte("Hello")))
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}

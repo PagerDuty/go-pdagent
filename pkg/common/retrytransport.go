@@ -1,4 +1,4 @@
-package eventsapi
+package common
 
 import (
 	"math"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 )
@@ -30,8 +29,9 @@ const defaultMaxRetries = 10
 //
 type RetryTransport struct {
 	MaxRetries  int
+	MaxInterval time.Duration
 	Transport   http.RoundTripper
-	Backoff     func(int) time.Duration
+	Backoff     func(int, time.Duration) time.Duration
 	IsRetryable func(*http.Response, error) bool
 	IsSuccess   func(*http.Response, error) bool
 
@@ -40,14 +40,14 @@ type RetryTransport struct {
 
 func NewRetryTransport() RetryTransport {
 	return RetryTransport{
-		MaxRetries: defaultMaxRetries,
-		Transport:  http.DefaultTransport,
+		MaxRetries:  defaultMaxRetries,
+		MaxInterval: defaultMaxInterval,
+		Transport:   http.DefaultTransport,
 
 		Backoff:     calculateBackoff,
 		IsRetryable: isRetryable,
-		IsSuccess:   isSuccess,
-
-		log: common.Logger.Named("RetryTransport"),
+		IsSuccess:   IsSuccessResponse,
+		log:         Logger.Named("RetryTransport"),
 	}
 }
 
@@ -73,7 +73,7 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 
-		backoff := r.Backoff(tries)
+		backoff := r.Backoff(tries, r.MaxInterval)
 		sleep := time.After(backoff)
 		r.log.Infof("Retrying job, attempt %v, delay %v", tries+1, backoff)
 
@@ -102,10 +102,10 @@ func (r RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 //
 // Currently back-off looks like: 1s, 2s, 4s, 8s, 16s, then capping at
 // MaxRetryTimeout.
-func calculateBackoff(try int) time.Duration {
+func calculateBackoff(try int, maxInterval time.Duration) time.Duration {
 	duration := time.Duration(math.Pow(2, float64(try))) * time.Second
-	if duration > defaultMaxInterval {
-		duration = defaultMaxInterval
+	if duration > maxInterval {
+		duration = maxInterval
 	}
 	return duration
 }
@@ -137,11 +137,11 @@ func isRetryable(resp *http.Response, err error) bool {
 	return resp.StatusCode == 429 || resp.StatusCode/100 == 5
 }
 
-// isSuccess returns true if the corresponding request was successful.
+// IsSuccessResponse returns true if the corresponding request was successful.
 //
 // Per documentation this is when the server responds with a 202, but we treat
 // any 2XX as a success.
-func isSuccess(resp *http.Response, err error) bool {
+func IsSuccessResponse(resp *http.Response, err error) bool {
 	if err != nil || resp == nil {
 		return false
 	}

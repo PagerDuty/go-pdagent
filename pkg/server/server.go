@@ -26,6 +26,7 @@ type Queue interface {
 type Server struct {
 	HTTPServer *http.Server
 	Queue      Queue
+	Heartbeat  Heartbeat
 
 	pidfile string
 	secret  string
@@ -36,6 +37,7 @@ type Option func(*Server)
 
 func NewServer(address, secret, pidfile string, queue Queue) *Server {
 	logger := common.Logger.Named("Server")
+	heartbeat := NewHeartbeat()
 
 	server := Server{
 		HTTPServer: &http.Server{
@@ -44,10 +46,11 @@ func NewServer(address, secret, pidfile string, queue Queue) *Server {
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		},
-		Queue:   queue,
-		pidfile: pidfile,
-		secret:  secret,
-		logger:  logger,
+		Queue:     queue,
+		Heartbeat: heartbeat,
+		pidfile:   pidfile,
+		secret:    secret,
+		logger:    logger,
 	}
 
 	server.HTTPServer.Handler = Router(&server)
@@ -67,6 +70,8 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	s.Heartbeat.Start()
+
 	go func() {
 		s.logger.Info(s.HTTPServer.ListenAndServe())
 	}()
@@ -85,6 +90,8 @@ func (s *Server) Start() error {
 		s.logger.Error("Error shutting down server's queue.")
 		return err
 	}
+
+	s.Heartbeat.Shutdown()
 
 	if err := common.RemovePidfile(s.pidfile); err != nil {
 		return err
