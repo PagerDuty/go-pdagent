@@ -322,3 +322,71 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 
 	assert.Contains(t, out, `{"key":"xyz"}`)
 }
+
+func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
+	defer gock.Off()
+
+	defaultHTTPClient := &http.Client{
+		Timeout: 5 * time.Minute,
+	}
+
+	realConfig := New()
+	realConfig.HttpClient = func() (*http.Client, error) {
+		return defaultHTTPClient, nil
+	}
+
+	const notificationType = "PROBLEM"
+	const routingKey = "xyz"
+	const sourceType = "service"
+	const severity = "warning"
+	const hostname = "computer.network"
+	const serviceDesc = "some service desc"
+	const serviceState = "down"
+	const dedupKey = "someDedupKey"
+
+	cmd := NewNagiosEnqueueCmd(realConfig)
+	cmd.SetArgs([]string{
+		"-k", routingKey,
+		"-t", notificationType,
+		"-u", sourceType,
+		"-e", severity,
+		"-y", dedupKey,
+		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
+		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
+		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
+	})
+
+	gock.New(getDefaults().Address).
+		Post("/send").
+		JSON(map[string]interface{}{
+			"routing_key":  routingKey,
+			"event_action": nagiosToPagerDutyEventType[notificationType],
+			"dedup_key":    dedupKey,
+			"payload": map[string]interface{}{
+				"summary":  fmt.Sprintf("HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v", hostname, serviceDesc, serviceState),
+				"source":   hostname,
+				"severity": severity,
+				"custom_details": map[string]string{
+					"pd_nagios_object": sourceType,
+					"HOSTNAME":         hostname,
+					"SERVICEDESC":      serviceDesc,
+					"SERVICESTATE":     serviceState,
+				},
+			},
+		}).
+		Reply(200).
+		JSON(map[string]interface{}{"key": routingKey})
+
+	gock.InterceptClient(defaultHTTPClient)
+
+	out, err := test.CaptureStdout(func() error {
+		_, err := cmd.ExecuteC()
+		return err
+	})
+
+	if err != nil {
+		t.Errorf("error running command `enqueue`: %v", err)
+	}
+
+	assert.Contains(t, out, `{"key":"xyz"}`)
+}
