@@ -25,7 +25,7 @@ func NewNagiosCmd(config *Config) *cobra.Command {
 		Short: "Access the Nagios integration command(s).",
 	}
 
-	cmd.AddCommand(NewNagiosEnqueue(config))
+	cmd.AddCommand(NewNagiosEnqueueCmd(config))
 
 	return cmd
 }
