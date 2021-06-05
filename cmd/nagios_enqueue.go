@@ -48,19 +48,21 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 		Payload: eventsapi.PayloadV2{},
 	}
 
+	requiredFlags := []string{"routing-key", "notification-type", "source-type", "severity"}
+
 	cmd := &cobra.Command{
 		Use:   "enqueue",
 		Short: "Enqueue an event from Nagios to PagerDuty.",
-		Long: `Enqueue an event from Nagios to PagerDuty.
+		Long: fmt.Sprintf(`Enqueue an event from Nagios to PagerDuty.
 
-	The following flags are required to be set for this command: routing-key, notification-type, source-type, severity.
+	The following flags are required to be set for this command: %v.
 
 	When the source type is "host", the following fields must be set using the -f flag:
-	HOSTNAME, HOSTSTATE
+	%v
 
 	When the source type is "service", the following fields must be set using the -f flag:
-	HOSTNAME, SERVICEDESC, SERVICESTATE
-		`,
+	%v
+		`, strings.Join(requiredFields["host"], ", "), strings.Join(requiredFields["service"], ", "), strings.Join(requiredFlags, ", ")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := validateNagiosSendCommand(sendEvent, sourceType, customDetails)
 			if err != nil {
@@ -79,10 +81,9 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
-	cmd.MarkFlagRequired("routing-key")
-	cmd.MarkFlagRequired("notification-type")
-	cmd.MarkFlagRequired("source-type")
-	cmd.MarkFlagRequired("severity")
+	for _, flag := range requiredFlags {
+		cmd.MarkFlagRequired(flag)
+	}
 
 	return cmd
 }
@@ -111,7 +112,7 @@ func buildEventDescription(sourceType string, customDetails map[string]string) s
 }
 
 func buildDedupKey(sourceType string, customDetails map[string]string) string {
-	if sourceType == "service" {
+	if sourceType == "host" {
 		return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
 	}
 	return fmt.Sprintf("event_source=service;host_name=%v;service_desc=%v", customDetails["HOSTNAME"], customDetails["SERVICEDESC"])
