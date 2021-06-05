@@ -123,7 +123,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 
 	_, err := cmd.ExecuteC()
 
-	expectedErr := errors.New("The HOSTNAME field must be set for source-type \"service\" using the -f flag")
+	expectedErr := errors.New("the HOSTNAME field must be set for source-type \"service\" using the -f flag")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 
@@ -137,7 +137,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 
 	_, err = cmd.ExecuteC()
 
-	expectedErr = errors.New("The SERVICEDESC field must be set for source-type \"service\" using the -f flag")
+	expectedErr = errors.New("the SERVICEDESC field must be set for source-type \"service\" using the -f flag")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 
@@ -152,7 +152,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 
 	_, err = cmd.ExecuteC()
 
-	expectedErr = errors.New("The SERVICESTATE field must be set for source-type \"service\" using the -f flag")
+	expectedErr = errors.New("the SERVICESTATE field must be set for source-type \"service\" using the -f flag")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 }
@@ -175,7 +175,7 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 
 	_, err := cmd.ExecuteC()
 
-	expectedErr := errors.New("The HOSTNAME field must be set for source-type \"host\" using the -f flag")
+	expectedErr := errors.New("the HOSTNAME field must be set for source-type \"host\" using the -f flag")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 
@@ -189,7 +189,7 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 
 	_, err = cmd.ExecuteC()
 
-	expectedErr = errors.New("The HOSTSTATE field must be set for source-type \"host\" using the -f flag")
+	expectedErr = errors.New("the HOSTSTATE field must be set for source-type \"host\" using the -f flag")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 }

@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -24,9 +23,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var errNotificationType = errors.New("notification-type must be one of: \"PROBLEM\", \"ACKNOWLEDGEMENT\", \"RECOVERY\"")
-var errSourceType = errors.New("source-type must be one of: \"host\", \"service\"")
-var errSeverity = errors.New("severity must be one of: \"critical\", \"warning\", \"error\", \"info\"")
+var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
+var allowedSourceTypes = []string{"host", "service"}
+var allowedSeverities = []string{"critical", "warning", "error", "info"}
+
+var errNotificationType = fmt.Errorf("notification-type must be one of: %v", strings.Join(allowedNotificationTypes, ", "))
+var errSourceType = fmt.Errorf("source-type must be one of: %v", strings.Join(allowedSourceTypes, ", "))
+var errSeverity = fmt.Errorf("severity must be one of: %v", strings.Join(allowedSeverities, ", "))
 
 var requiredFields = map[string][]string{
 	"host":    {"HOSTNAME", "HOSTSTATE"},
@@ -119,17 +122,14 @@ func buildDedupKey(sourceType string, customDetails map[string]string) string {
 }
 
 func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
-	allowedNotificationTypes := []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
 	if err := validateEnumField(sendEvent.EventAction, allowedNotificationTypes, errNotificationType); err != nil {
 		return err
 	}
 
-	allowedSourceTypes := []string{"host", "service"}
 	if err := validateEnumField(sourceType, allowedSourceTypes, errSourceType); err != nil {
 		return err
 	}
 
-	allowedSeverities := []string{"critical", "warning", "error", "info"}
 	if err := validateEnumField(sendEvent.Payload.Severity, allowedSeverities, errSeverity); err != nil {
 		return err
 	}
@@ -154,8 +154,7 @@ func validateCustomDetails(sourceType string, customDetails map[string]string) e
 	requiredKeys := requiredFields[sourceType]
 	for _, key := range requiredKeys {
 		if _, ok := customDetails[key]; !ok {
-			errorString := fmt.Sprintf("The %v field must be set for source-type \"%v\" using the -f flag", key, sourceType)
-			return errors.New(errorString)
+			return fmt.Errorf("the %v field must be set for source-type \"%v\" using the -f flag", key, sourceType)
 		}
 	}
 	return nil
