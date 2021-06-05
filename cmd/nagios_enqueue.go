@@ -64,23 +64,19 @@ func NewNagiosEnqueue(config *Config) *cobra.Command {
 }
 
 func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
-	err := validateNotificationType(sendEvent.EventAction)
-	if err != nil {
+	if err := validateNotificationType(sendEvent.EventAction); err != nil {
 		return err
 	}
 
-	err = validateSourceType(sourceType)
-	if err != nil {
+	if err := validateSourceType(sourceType); err != nil {
 		return err
 	}
 
-	err = validateSeverity(sendEvent.Payload.Severity)
-	if err != nil {
+	if err := validateSeverity(sendEvent.Payload.Severity); err != nil {
 		return err
 	}
 
-	err = validateCustomDetails(sourceType, customDetails)
-	if err != nil {
+	if err := validateCustomDetails(sourceType, customDetails); err != nil {
 		return err
 	}
 
@@ -157,10 +153,8 @@ func buildDedupKey(sourceType string, customDetails map[string]string) string {
 
 func validateNotificationType(notificationType string) error {
 	allowedValues := []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
-	for _, value := range allowedValues {
-		if notificationType == value {
-			return nil
-		}
+	if isNotificationTypeValid := isValInSlice(notificationType, allowedValues); isNotificationTypeValid {
+		return nil
 	}
 
 	err := errors.New("notification-type must be one of: \"PROBLEM\", \"ACKNOWLEDGEMENT\", \"RECOVERY\"")
@@ -169,10 +163,8 @@ func validateNotificationType(notificationType string) error {
 
 func validateSourceType(sourceType string) error {
 	allowedValues := []string{"host", "service"}
-	for _, value := range allowedValues {
-		if sourceType == value {
-			return nil
-		}
+	if isSourceTypeValid := isValInSlice(sourceType, allowedValues); isSourceTypeValid {
+		return nil
 	}
 
 	err := errors.New("source-type must be one of: \"host\", \"service\"")
@@ -181,10 +173,8 @@ func validateSourceType(sourceType string) error {
 
 func validateSeverity(severity string) error {
 	allowedValues := []string{"critical", "warning", "error", "info"}
-	for _, value := range allowedValues {
-		if severity == value {
-			return nil
-		}
+	if isSeverityValid := isValInSlice(severity, allowedValues); isSeverityValid {
+		return nil
 	}
 
 	err := errors.New("severity must be one of: \"critical\", \"warning\", \"error\", \"info\"")
@@ -195,11 +185,20 @@ func validateCustomDetails(sourceType string, customDetails map[string]string) e
 	requiredKeys := requiredFields()[sourceType]
 	for _, key := range requiredKeys {
 		if _, ok := customDetails[key]; !ok {
-			errorString := fmt.Sprintf("The %v field must be set for source-type \"%v\"", key, sourceType)
+			errorString := fmt.Sprintf("The %v field must be set for source-type \"%v\" using the -f flag", key, sourceType)
 			err := errors.New(errorString)
 			return err
 		}
 	}
 
 	return nil
+}
+
+func isValInSlice(val string, slice []string) bool {
+	for _, value := range slice {
+		if val == value {
+			return true
+		}
+	}
+	return false
 }
