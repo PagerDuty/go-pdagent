@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -37,7 +38,13 @@ func NewNagiosEnqueue(config *Config) *cobra.Command {
 		Use:   "enqueue",
 		Short: "Enqueue an event from Nagios to PagerDuty.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runNagiosSendCommand(config, sourceType, sendEvent, customDetails)
+			err := validateNagiosSendCommand(sendEvent, sourceType, customDetails)
+			if err != nil {
+				return err
+			}
+			transformedSendEvent := transformNagiosSendEvent(sendEvent, sourceType, customDetails)
+
+			return runNagiosSendCommand(config, sourceType, transformedSendEvent, customDetails)
 		},
 	}
 
@@ -56,34 +63,32 @@ func NewNagiosEnqueue(config *Config) *cobra.Command {
 	return cmd
 }
 
-// func validateNagiosSendCommand(sendEvent eventsapi.EventV2) error {
+func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
+	err := validateNotificationType(sendEvent.EventAction)
+	if err != nil {
+		return err
+	}
 
-// }
+	err = validateSourceType(sourceType)
+	if err != nil {
+		return err
+	}
+
+	err = validateSeverity(sendEvent.Payload.Severity)
+	if err != nil {
+		return err
+	}
+
+	err = validateCustomDetails(sourceType, customDetails)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func runNagiosSendCommand(config *Config, sourceType string, sendEvent eventsapi.EventV2, customDetails map[string]string) error {
 	c, _ := config.Client()
-
-	sendEvent.Payload.Source = customDetails["HOSTNAME"]
-	sendEvent.Payload.Summary = buildEventDescription(sourceType, customDetails)
-
-	// Manually mapping as a workaround for the map type mismatch.
-	sendEvent.Payload.CustomDetails = map[string]interface{}{}
-	for k, v := range customDetails {
-		sendEvent.Payload.CustomDetails[k] = v
-	}
-	sendEvent.Payload.CustomDetails["pd_nagios_object"] = sourceType
-
-	nagiosNotificationTypeToPagerDutyEventType := map[string]string{
-		"PROBLEM":         "trigger",
-		"ACKNOWLEDGEMENT": "acknowledge",
-		"RECOVERY":        "resolve",
-	}
-
-	sendEvent.EventAction = nagiosNotificationTypeToPagerDutyEventType[sendEvent.EventAction]
-
-	if sendEvent.DedupKey == "" {
-		sendEvent.DedupKey = buildDedupKey(sourceType, customDetails)
-	}
 
 	resp, err := c.Send(sendEvent)
 	if err != nil {
@@ -98,6 +103,32 @@ func runNagiosSendCommand(config *Config, sourceType string, sendEvent eventsapi
 
 	fmt.Println(string(respBody))
 	return nil
+}
+
+func transformNagiosSendEvent(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) eventsapi.EventV2 {
+	sendEvent.Payload.Source = customDetails["HOSTNAME"]
+	sendEvent.Payload.Summary = buildEventDescription(sourceType, customDetails)
+
+	// Manually mapping as a workaround for the map type mismatch.
+	sendEvent.Payload.CustomDetails = map[string]interface{}{}
+	for k, v := range customDetails {
+		sendEvent.Payload.CustomDetails[k] = v
+	}
+	sendEvent.Payload.CustomDetails["pd_nagios_object"] = sourceType
+
+	nagiosToPagerDutyEventType := map[string]string{
+		"PROBLEM":         "trigger",
+		"ACKNOWLEDGEMENT": "acknowledge",
+		"RECOVERY":        "resolve",
+	}
+
+	sendEvent.EventAction = nagiosToPagerDutyEventType[sendEvent.EventAction]
+
+	if sendEvent.DedupKey == "" {
+		sendEvent.DedupKey = buildDedupKey(sourceType, customDetails)
+	}
+
+	return sendEvent
 }
 
 func buildEventDescription(sourceType string, customDetails map[string]string) string {
@@ -122,4 +153,53 @@ func buildDedupKey(sourceType string, customDetails map[string]string) string {
 		)
 	}
 	return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
+}
+
+func validateNotificationType(notificationType string) error {
+	allowedValues := []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
+	for _, value := range allowedValues {
+		if notificationType == value {
+			return nil
+		}
+	}
+
+	err := errors.New("notification-type must be one of: \"PROBLEM\", \"ACKNOWLEDGEMENT\", \"RECOVERY\"")
+	return err
+}
+
+func validateSourceType(sourceType string) error {
+	allowedValues := []string{"host", "service"}
+	for _, value := range allowedValues {
+		if sourceType == value {
+			return nil
+		}
+	}
+
+	err := errors.New("source-type must be one of: \"host\", \"service\"")
+	return err
+}
+
+func validateSeverity(severity string) error {
+	allowedValues := []string{"critical", "warning", "error", "info"}
+	for _, value := range allowedValues {
+		if severity == value {
+			return nil
+		}
+	}
+
+	err := errors.New("severity must be one of: \"critical\", \"warning\", \"error\", \"info\"")
+	return err
+}
+
+func validateCustomDetails(sourceType string, customDetails map[string]string) error {
+	requiredKeys := requiredFields()[sourceType]
+	for _, key := range requiredKeys {
+		if _, ok := customDetails[key]; !ok {
+			errorString := fmt.Sprintf("The %v field must be set for source-type \"%v\"", key, sourceType)
+			err := errors.New(errorString)
+			return err
+		}
+	}
+
+	return nil
 }
