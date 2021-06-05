@@ -51,6 +51,16 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "enqueue",
 		Short: "Enqueue an event from Nagios to PagerDuty.",
+		Long: `Enqueue an event from Nagios to PagerDuty.
+
+	The following flags are required to be set for this command: routing-key, notification-type, source-type, severity.
+
+	When the source type is "host", the following fields must be set using the -f flag:
+	HOSTNAME, HOSTSTATE
+
+	When the source type is "service", the following fields must be set using the -f flag:
+	HOSTNAME, SERVICEDESC, SERVICESTATE
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := validateNagiosSendCommand(sendEvent, sourceType, customDetails)
 			if err != nil {
