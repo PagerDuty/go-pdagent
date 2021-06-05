@@ -77,26 +77,6 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 	return cmd
 }
 
-func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
-	if err := validateNotificationType(sendEvent.EventAction); err != nil {
-		return err
-	}
-
-	if err := validateSourceType(sourceType); err != nil {
-		return err
-	}
-
-	if err := validateSeverity(sendEvent.Payload.Severity); err != nil {
-		return err
-	}
-
-	if err := validateCustomDetails(sourceType, customDetails); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func nagiosTransformations(
 	sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string,
 ) (eventsapi.EventV2, map[string]string) {
@@ -127,6 +107,26 @@ func buildDedupKey(sourceType string, customDetails map[string]string) string {
 		)
 	}
 	return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
+}
+
+func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
+	if err := validateNotificationType(sendEvent.EventAction); err != nil {
+		return err
+	}
+
+	if err := validateSourceType(sourceType); err != nil {
+		return err
+	}
+
+	if err := validateSeverity(sendEvent.Payload.Severity); err != nil {
+		return err
+	}
+
+	if err := validateCustomDetails(sourceType, customDetails); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func validateNotificationType(notificationType string) error {
