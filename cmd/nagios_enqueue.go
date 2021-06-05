@@ -112,23 +112,24 @@ func buildEventDescription(sourceType string, customDetails map[string]string) s
 
 func buildDedupKey(sourceType string, customDetails map[string]string) string {
 	if sourceType == "service" {
-		return fmt.Sprintf(
-			"event_source=service;host_name=%v;service_desc=%v", customDetails["HOSTNAME"], customDetails["SERVICEDESC"],
-		)
+		return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
 	}
-	return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
+	return fmt.Sprintf("event_source=service;host_name=%v;service_desc=%v", customDetails["HOSTNAME"], customDetails["SERVICEDESC"])
 }
 
 func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
-	if err := validateNotificationType(sendEvent.EventAction); err != nil {
+	allowedNotificationTypes := []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
+	if err := validateEnumField(sendEvent.EventAction, allowedNotificationTypes, errNotificationType); err != nil {
 		return err
 	}
 
-	if err := validateSourceType(sourceType); err != nil {
+	allowedSourceTypes := []string{"host", "service"}
+	if err := validateEnumField(sourceType, allowedSourceTypes, errSourceType); err != nil {
 		return err
 	}
 
-	if err := validateSeverity(sendEvent.Payload.Severity); err != nil {
+	allowedSeverities := []string{"critical", "warning", "error", "info"}
+	if err := validateEnumField(sendEvent.Payload.Severity, allowedSeverities, errSeverity); err != nil {
 		return err
 	}
 
@@ -139,28 +140,13 @@ func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, c
 	return nil
 }
 
-func validateNotificationType(notificationType string) error {
-	allowedValues := []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
-	if isNotificationTypeValid := isValInSlice(notificationType, allowedValues); isNotificationTypeValid {
-		return nil
+func validateEnumField(inputVal string, allowedValues []string, err error) error {
+	for _, value := range allowedValues {
+		if value == inputVal {
+			return nil
+		}
 	}
-	return errNotificationType
-}
-
-func validateSourceType(sourceType string) error {
-	allowedValues := []string{"host", "service"}
-	if isSourceTypeValid := isValInSlice(sourceType, allowedValues); isSourceTypeValid {
-		return nil
-	}
-	return errSourceType
-}
-
-func validateSeverity(severity string) error {
-	allowedValues := []string{"critical", "warning", "error", "info"}
-	if isSeverityValid := isValInSlice(severity, allowedValues); isSeverityValid {
-		return nil
-	}
-	return errSeverity
+	return err
 }
 
 func validateCustomDetails(sourceType string, customDetails map[string]string) error {
@@ -168,19 +154,8 @@ func validateCustomDetails(sourceType string, customDetails map[string]string) e
 	for _, key := range requiredKeys {
 		if _, ok := customDetails[key]; !ok {
 			errorString := fmt.Sprintf("The %v field must be set for source-type \"%v\" using the -f flag", key, sourceType)
-			err := errors.New(errorString)
-			return err
+			return errors.New(errorString)
 		}
 	}
-
 	return nil
-}
-
-func isValInSlice(val string, slice []string) bool {
-	for _, value := range slice {
-		if val == value {
-			return true
-		}
-	}
-	return false
 }
