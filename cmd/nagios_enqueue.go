@@ -65,7 +65,7 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 
 	When the source type is "service", the following fields must be set using the -f flag:
 	%v
-		`, strings.Join(requiredFields["host"], ", "), strings.Join(requiredFields["service"], ", "), strings.Join(requiredFlags, ", ")),
+		`, strings.Join(requiredFlags, ", "), strings.Join(requiredFields["host"], ", "), strings.Join(requiredFields["service"], ", ")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := validateNagiosSendCommand(sendEvent, sourceType, customDetails)
 			if err != nil {
