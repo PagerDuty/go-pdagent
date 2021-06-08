@@ -22,6 +22,8 @@ checksum:
   name_template: 'checksums.txt'
 signs:
 - artifacts: all
+  stdin_file: ./gpg_pass.txt
+  args: ["--batch", "--pinentry-mode=loopback", "--passphrase-fd", "0", "--output", "${signature}", "--detach-sign", "${artifact}"]
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
