@@ -34,7 +34,7 @@ func TestNagiosEnqueue_missingRequiredFlags(t *testing.T) {
 
 	_, err := cmd.ExecuteC()
 
-	expectedErr := errors.New("required flag(s) \"notification-type\", \"routing-key\", \"severity\", \"source-type\" not set")
+	expectedErr := errors.New("required flag(s) \"notification-type\", \"routing-key\", \"source-type\" not set")
 	assert.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 }
@@ -45,14 +45,12 @@ func TestNagiosEnqueue_invalidNotificationType(t *testing.T) {
 	const notificationType = "trigger"
 	const routingKey = "abc"
 	const sourceType = "host"
-	const severity = "info"
 
 	cmd := NewNagiosEnqueueCmd(realConfig)
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -67,14 +65,12 @@ func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
 	const notificationType = "PROBLEM"
 	const routingKey = "abc"
 	const sourceType = "invalidSourceType"
-	const severity = "warning"
 
 	cmd := NewNagiosEnqueueCmd(realConfig)
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -83,42 +79,18 @@ func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
 	assert.Equal(t, errSourceType, err)
 }
 
-func TestNagiosEnqueue_invalidSeverity(t *testing.T) {
-	realConfig := New()
-
-	const notificationType = "ACKNOWLEDGEMENT"
-	const routingKey = "abc"
-	const sourceType = "service"
-	const severity = "invalidSeverity"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-u", sourceType,
-		"-e", severity,
-	})
-
-	_, err := cmd.ExecuteC()
-
-	assert.Error(t, err)
-	assert.Equal(t, errSeverity, err)
-}
-
 func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 	realConfig := New()
 
 	const notificationType = "RECOVERY"
 	const routingKey = "abc"
 	const sourceType = "service"
-	const severity = "critical"
 
 	cmd := NewNagiosEnqueueCmd(realConfig)
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -131,7 +103,6 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-f", "HOSTNAME=computer.network",
 	})
 
@@ -145,7 +116,6 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-f", "HOSTNAME=computer.network",
 		"-f", "SERVICEDESC=a service",
 	})
@@ -163,14 +133,12 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 	const notificationType = "RECOVERY"
 	const routingKey = "abc"
 	const sourceType = "host"
-	const severity = "error"
 
 	cmd := NewNagiosEnqueueCmd(realConfig)
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -183,7 +151,6 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-f", "HOSTNAME=computer.network",
 	})
 
@@ -209,7 +176,6 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 	const notificationType = "PROBLEM"
 	const routingKey = "xyz"
 	const sourceType = "host"
-	const severity = "warning"
 	const hostname = "computer.network"
 	const hoststate = "down"
 
@@ -218,7 +184,6 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("HOSTSTATE=%v", hoststate),
 	})
@@ -232,7 +197,7 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 			"payload": map[string]interface{}{
 				"summary":  fmt.Sprintf("HOSTNAME=%v; HOSTSTATE=%v", hostname, hoststate),
 				"source":   hostname,
-				"severity": severity,
+				"severity": defaultNagiosIntegrationSeverity,
 				"custom_details": map[string]string{
 					"pd_nagios_object": sourceType,
 					"HOSTNAME":         hostname,
@@ -272,7 +237,6 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 	const notificationType = "PROBLEM"
 	const routingKey = "xyz"
 	const sourceType = "service"
-	const severity = "warning"
 	const hostname = "computer.network"
 	const serviceDesc = "some service desc"
 	const serviceState = "down"
@@ -282,7 +246,6 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
 		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
@@ -297,7 +260,7 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 			"payload": map[string]interface{}{
 				"summary":  fmt.Sprintf("HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v", hostname, serviceDesc, serviceState),
 				"source":   hostname,
-				"severity": severity,
+				"severity": defaultNagiosIntegrationSeverity,
 				"custom_details": map[string]string{
 					"pd_nagios_object": sourceType,
 					"HOSTNAME":         hostname,
@@ -338,7 +301,6 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 	const notificationType = "PROBLEM"
 	const routingKey = "xyz"
 	const sourceType = "service"
-	const severity = "warning"
 	const hostname = "computer.network"
 	const serviceDesc = "some service desc"
 	const serviceState = "down"
@@ -349,7 +311,6 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 		"-k", routingKey,
 		"-t", notificationType,
 		"-u", sourceType,
-		"-e", severity,
 		"-y", dedupKey,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
@@ -365,7 +326,7 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 			"payload": map[string]interface{}{
 				"summary":  fmt.Sprintf("HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v", hostname, serviceDesc, serviceState),
 				"source":   hostname,
-				"severity": severity,
+				"severity": defaultNagiosIntegrationSeverity,
 				"custom_details": map[string]string{
 					"pd_nagios_object": sourceType,
 					"HOSTNAME":         hostname,

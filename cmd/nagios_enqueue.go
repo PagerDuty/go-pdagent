@@ -23,13 +23,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const defaultNagiosIntegrationSeverity = "error"
+
 var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
 var allowedSourceTypes = []string{"host", "service"}
-var allowedSeverities = []string{"critical", "warning", "error", "info"}
 
 var errNotificationType = fmt.Errorf("notification-type must be one of: %v", strings.Join(allowedNotificationTypes, ", "))
 var errSourceType = fmt.Errorf("source-type must be one of: %v", strings.Join(allowedSourceTypes, ", "))
-var errSeverity = fmt.Errorf("severity must be one of: %v", strings.Join(allowedSeverities, ", "))
 
 var requiredFields = map[string][]string{
 	"host":    {"HOSTNAME", "HOSTSTATE"},
@@ -51,7 +51,7 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 		Payload: eventsapi.PayloadV2{},
 	}
 
-	requiredFlags := []string{"routing-key", "notification-type", "source-type", "severity"}
+	requiredFlags := []string{"routing-key", "notification-type", "source-type"}
 
 	cmd := &cobra.Command{
 		Use:   "enqueue",
@@ -80,7 +80,6 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key (required)")
 	cmd.Flags().StringVarP(&sendEvent.EventAction, "notification-type", "t", "", "The Nagios notification type (required)")
 	cmd.Flags().StringVarP(&sourceType, "source-type", "u", "", "The Nagios source type (host or service, required)")
-	cmd.Flags().StringVarP(&sendEvent.Payload.Severity, "severity", "e", "", "The perceived severity of the event (required)")
 	cmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
@@ -94,6 +93,7 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 func nagiosTransformations(
 	sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string,
 ) (eventsapi.EventV2, map[string]string) {
+	sendEvent.Payload.Severity = defaultNagiosIntegrationSeverity
 	sendEvent.Payload.Summary = buildEventDescription(sourceType, customDetails)
 	sendEvent.EventAction = nagiosToPagerDutyEventType[sendEvent.EventAction]
 	sendEvent.Payload.Source = customDetails["HOSTNAME"]
@@ -127,10 +127,6 @@ func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, c
 	}
 
 	if err := validateEnumField(sourceType, allowedSourceTypes, errSourceType); err != nil {
-		return err
-	}
-
-	if err := validateEnumField(sendEvent.Payload.Severity, allowedSeverities, errSeverity); err != nil {
 		return err
 	}
 
