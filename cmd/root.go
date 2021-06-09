@@ -51,11 +51,11 @@ func NewRootCmd(config *Config) *cobra.Command {
 		Use:   "pdagent",
 		Short: "PagerDuty Agent CLI",
 		Long: `A PagerDuty Agent and corresponding Command Line Interface.
-	
+
 	The agent acts as a local server between your own infrastructure and PagerDuty,
 	providing command line tools to send PagerDuty events while ensuring event
 	ordering and mitigating backpressure.
-	
+
 	On first run it's recommended you run "init" to generate a default
 	configuration, then run "server" to start the agent itself.`,
 		SilenceErrors: true,
@@ -90,6 +90,7 @@ func NewRootCmd(config *Config) *cobra.Command {
 	rootCmd.AddCommand(NewSendCmd(config))
 	rootCmd.AddCommand(NewServerCmd())
 	rootCmd.AddCommand(NewVersionCmd())
+	rootCmd.AddCommand(NewNagiosCmd(config))
 
 	return rootCmd
 }

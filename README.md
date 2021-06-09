@@ -137,6 +137,6 @@ This project aims to eventually replace the existing `pdagent` project, but with
     - [ ] `rpm` repo support.
         - [ ] Signed packages.
 - [ ] `pdagent-integrations` support.
-    - [ ] `pd-nagios`
+    - [x] `pd-nagios`
     - [ ] `pd-sensu`
     - [ ] `pd-zabbix`
