@@ -79,7 +79,7 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 
 	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key (required)")
 	cmd.Flags().StringVarP(&sendEvent.EventAction, "notification-type", "t", "", "The Nagios notification type (required)")
-	cmd.Flags().StringVarP(&sourceType, "source-type", "u", "", "The Nagios source type (host or service, required)")
+	cmd.Flags().StringVarP(&sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
 	cmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 

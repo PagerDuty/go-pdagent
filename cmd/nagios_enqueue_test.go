@@ -50,7 +50,7 @@ func TestNagiosEnqueue_invalidNotificationType(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -70,7 +70,7 @@ func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -90,7 +90,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -102,7 +102,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-f", "HOSTNAME=computer.network",
 	})
 
@@ -115,7 +115,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-f", "HOSTNAME=computer.network",
 		"-f", "SERVICEDESC=a service",
 	})
@@ -138,7 +138,7 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 	})
 
 	_, err := cmd.ExecuteC()
@@ -150,7 +150,7 @@ func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-f", "HOSTNAME=computer.network",
 	})
 
@@ -183,7 +183,7 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("HOSTSTATE=%v", hoststate),
 	})
@@ -245,7 +245,7 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
 		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
@@ -310,7 +310,7 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 	cmd.SetArgs([]string{
 		"-k", routingKey,
 		"-t", notificationType,
-		"-u", sourceType,
+		"-n", sourceType,
 		"-y", dedupKey,
 		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
 		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
