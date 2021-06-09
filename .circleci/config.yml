@@ -26,7 +26,9 @@ jobs:
             echo $GPG_PASS > ./gpg_pass.txt
       - run:
           name: Cut release
-          command: curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish --rm-dist
+          command: curl -sL https://git.io/goreleaser | bash -s -- --snapshot --skip-publish
+      - store_artifacts:
+          path: ./dist
   release:
     docker:
       - image: circleci/golang:1.14
