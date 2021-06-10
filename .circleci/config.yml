@@ -3,6 +3,13 @@ version: 2.1
 orbs:
   git: pagerduty/git@0.0.3
 
+only-release-tags: &only-release-tags
+  filters:
+    branches:
+      ignore: /.*/
+    tags:
+      only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+
 jobs:
   test:
     docker:
@@ -50,12 +57,12 @@ workflows:
     jobs:
       - test
       - release-test
+  tagged-release:
+    jobs:
+      - test: *only-release-tags
+      - release-test: *only-release-tags
       - release:
+          <<: *only-release-tags
           requires:
             - test
             - release-test
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
