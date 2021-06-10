@@ -56,6 +56,6 @@ workflows:
             - release-test
           filters:
             branches:
-              only: main
+              ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
