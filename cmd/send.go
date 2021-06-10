@@ -16,11 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
 
-func NewSendCmd(config *Config) *cobra.Command {
+func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 	var customDetails map[string]string
 
 	var sendEvent = eventsapi.EventV2{
@@ -30,11 +31,11 @@ func NewSendCmd(config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send",
 		Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
-		Long: `Queue up a trigger, acknowledge, or resolve V2 event to PagerDuty 
+		Long: `Queue up a trigger, acknowledge, or resolve V2 event to PagerDuty
 		using a backwards-compatible set of flags.`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runSendCommand(config, sendEvent, customDetails)
+			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
 		},
 	}
 

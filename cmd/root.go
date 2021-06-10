@@ -18,11 +18,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path"
 
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/cmd/integrations/nagios"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -40,13 +40,13 @@ func Execute() {
 }
 
 func init() {
-	config := New()
+	config := cmdutil.NewConfig()
 
 	rootCmd = NewRootCmd(config)
 	cobra.OnInitialize(initConfig)
 }
 
-func NewRootCmd(config *Config) *cobra.Command {
+func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "pdagent",
 		Short: "PagerDuty Agent CLI",
@@ -62,7 +62,7 @@ func NewRootCmd(config *Config) *cobra.Command {
 		SilenceUsage:  true,
 	}
 
-	defaults := getDefaults()
+	defaults := cmdutil.GetDefaults()
 	rootCmd.Version = common.Version
 
 	pflags := rootCmd.PersistentFlags()
@@ -90,7 +90,7 @@ func NewRootCmd(config *Config) *cobra.Command {
 	rootCmd.AddCommand(NewSendCmd(config))
 	rootCmd.AddCommand(NewServerCmd())
 	rootCmd.AddCommand(NewVersionCmd())
-	rootCmd.AddCommand(NewNagiosCmd(config))
+	rootCmd.AddCommand(nagios.NewNagiosCmd(config))
 
 	return rootCmd
 }
@@ -103,7 +103,7 @@ func initConfig() {
 		// We add both production and dev paths here such that either config
 		// will be automatically picked up.
 		viper.AddConfigPath("/etc/pdagent/")
-		viper.AddConfigPath(getDefaultConfigPath())
+		viper.AddConfigPath(cmdutil.GetDefaultConfigPath())
 		viper.SetConfigName("config")
 	}
 
@@ -111,45 +111,4 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	_ = viper.ReadInConfig()
-}
-
-type Defaults struct {
-	Address    string
-	ConfigPath string
-	Database   string
-	Pidfile    string
-	Secret     string
-}
-
-func getDefaults() Defaults {
-	prod := common.IsProduction()
-
-	if prod {
-		return Defaults{
-			Address:    "127.0.0.1:49463",
-			ConfigPath: "/etc/pdagent/",
-			Database:   "/var/db/pdagent/pdagent.db",
-			Pidfile:    "/var/run/pdagent/pidfile",
-			Secret:     common.GenerateKey(),
-		}
-	}
-
-	configPath := getDefaultConfigPath()
-
-	return Defaults{
-		Address:    "127.0.0.1:49463",
-		ConfigPath: configPath,
-		Database:   path.Join(configPath, "pdagent.db"),
-		Pidfile:    path.Join(configPath, "pidfile"),
-		Secret:     common.GenerateKey(),
-	}
-}
-
-func getDefaultConfigPath() string {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return path.Join(home, ".pdagent")
 }

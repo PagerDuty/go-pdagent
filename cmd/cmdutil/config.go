@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package cmdutil
 
 import (
 	"net/http"
@@ -28,7 +28,7 @@ type Config struct {
 	Client     func() (*client.Client, error)
 }
 
-func New() *Config {
+func NewConfig() *Config {
 	httpClientFunc := func() (*http.Client, error) {
 		client := &http.Client{
 			Transport: http.DefaultTransport,
@@ -41,7 +41,11 @@ func New() *Config {
 		HttpClient: httpClientFunc,
 		Client: func() (*client.Client, error) {
 			httpClient, _ := httpClientFunc()
-			c := client.NewClient(httpClient, viper.GetString("address"), viper.GetString("secret"))
+			address := viper.GetString("address")
+			if address == "" {
+				address = GetDefaults().Address
+			}
+			c := client.NewClient(httpClient, address, viper.GetString("secret"))
 			return c, nil
 		},
 	}

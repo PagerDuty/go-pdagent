@@ -13,12 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package nagios
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +43,7 @@ var nagiosToPagerDutyEventType = map[string]string{
 	"RECOVERY":        "resolve",
 }
 
-func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
+func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	var customDetails map[string]string
 
 	var sourceType string
@@ -73,7 +74,7 @@ func NewNagiosEnqueueCmd(config *Config) *cobra.Command {
 			}
 
 			transformedSendEvent, transformedCustomDetails := nagiosTransformations(sendEvent, sourceType, customDetails)
-			return runSendCommand(config, transformedSendEvent, transformedCustomDetails)
+			return cmdutil.RunSendCommand(config, transformedSendEvent, transformedCustomDetails)
 		},
 	}
 

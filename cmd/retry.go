@@ -16,44 +16,22 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/spf13/cobra"
 )
 
-func NewQueueRetryCmd(config *Config) *cobra.Command {
+func NewQueueRetryCmd(config *cmdutil.Config) *cobra.Command {
 	var routingKey string
 
 	cmd := &cobra.Command{
 		Use:   "retry",
 		Short: "Retry failed events.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRetryCommand(config, routingKey)
+			return cmdutil.RunRetryCommand(config, routingKey)
 		},
 	}
 
 	cmd.Flags().StringVarP(&routingKey, "routing-key", "k", "", "The Events API Key to check")
 
 	return cmd
-}
-
-func runRetryCommand(config *Config, routingKey string) error {
-	c, _ := config.Client()
-
-	resp, err := c.QueueRetry(routingKey)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	fmt.Println(string(respBody))
-	return nil
 }

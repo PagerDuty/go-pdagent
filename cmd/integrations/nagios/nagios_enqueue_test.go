@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package nagios
 
 import (
 	"errors"
@@ -22,13 +22,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )
 
 func TestNagiosEnqueue_missingRequiredFlags(t *testing.T) {
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 
 	cmd := NewNagiosEnqueueCmd(realConfig)
 
@@ -40,7 +41,7 @@ func TestNagiosEnqueue_missingRequiredFlags(t *testing.T) {
 }
 
 func TestNagiosEnqueue_invalidNotificationType(t *testing.T) {
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 
 	const notificationType = "trigger"
 	const routingKey = "abc"
@@ -60,7 +61,7 @@ func TestNagiosEnqueue_invalidNotificationType(t *testing.T) {
 }
 
 func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 
 	const notificationType = "PROBLEM"
 	const routingKey = "abc"
@@ -80,7 +81,7 @@ func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
 }
 
 func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 
 	const notificationType = "RECOVERY"
 	const routingKey = "abc"
@@ -128,7 +129,7 @@ func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
 }
 
 func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 
 	const notificationType = "RECOVERY"
 	const routingKey = "abc"
@@ -168,7 +169,7 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 		Timeout: 5 * time.Minute,
 	}
 
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 	realConfig.HttpClient = func() (*http.Client, error) {
 		return defaultHTTPClient, nil
 	}
@@ -188,7 +189,7 @@ func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
 		"-f", fmt.Sprintf("HOSTSTATE=%v", hoststate),
 	})
 
-	gock.New(getDefaults().Address).
+	gock.New(cmdutil.GetDefaults().Address).
 		Post("/send").
 		JSON(map[string]interface{}{
 			"routing_key":  routingKey,
@@ -229,7 +230,7 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 		Timeout: 5 * time.Minute,
 	}
 
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 	realConfig.HttpClient = func() (*http.Client, error) {
 		return defaultHTTPClient, nil
 	}
@@ -251,7 +252,7 @@ func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
 		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
 	})
 
-	gock.New(getDefaults().Address).
+	gock.New(cmdutil.GetDefaults().Address).
 		Post("/send").
 		JSON(map[string]interface{}{
 			"routing_key":  routingKey,
@@ -293,7 +294,7 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 		Timeout: 5 * time.Minute,
 	}
 
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 	realConfig.HttpClient = func() (*http.Client, error) {
 		return defaultHTTPClient, nil
 	}
@@ -317,7 +318,7 @@ func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
 		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
 	})
 
-	gock.New(getDefaults().Address).
+	gock.New(cmdutil.GetDefaults().Address).
 		Post("/send").
 		JSON(map[string]interface{}{
 			"routing_key":  routingKey,

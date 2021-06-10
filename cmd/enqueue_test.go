@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -32,14 +33,14 @@ func TestEnqueue_noInput(t *testing.T) {
 		Timeout: 5 * time.Minute,
 	}
 
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 	realConfig.HttpClient = func() (*http.Client, error) {
 		return defaultHTTPClient, nil
 	}
 
 	cmd := NewEnqueueCmd(realConfig)
 
-	gock.New(getDefaults().Address).
+	gock.New(cmdutil.GetDefaults().Address).
 		Post("/send").
 		BodyString(`{"routing_key":"","event_action":"","payload":{"summary":"","source":"","severity":"error"}}`).
 		Reply(200).
@@ -66,7 +67,7 @@ func TestEnqueue_validInput(t *testing.T) {
 		Timeout: 5 * time.Minute,
 	}
 
-	realConfig := New()
+	realConfig := cmdutil.NewConfig()
 	realConfig.HttpClient = func() (*http.Client, error) {
 		return defaultHTTPClient, nil
 	}
@@ -84,7 +85,7 @@ func TestEnqueue_validInput(t *testing.T) {
 		"-d", Summary,
 	})
 
-	gock.New(getDefaults().Address).
+	gock.New(cmdutil.GetDefaults().Address).
 		Post("/send").
 		JSON(map[string]interface{}{
 			"routing_key":  RoutingKey,
