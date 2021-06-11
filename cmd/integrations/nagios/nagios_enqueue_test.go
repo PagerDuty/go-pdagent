@@ -29,14 +29,6 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-type nagiosEnqueueInput struct {
-	routingKey       string
-	notificationType string
-	sourceType       string
-	dedupKey         string
-	customFields     map[string]string
-}
-
 func buildCmdArgs(inputs nagiosEnqueueInput) []string {
 	args := []string{}
 	flags := []struct {
@@ -142,17 +134,17 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			realConfig := cmdutil.NewConfig()
 
 			cmd := NewNagiosEnqueueCmd(realConfig)
-			cmd.SetArgs(buildCmdArgs(test.inputs))
+			cmd.SetArgs(buildCmdArgs(tt.inputs))
 
 			_, err := cmd.ExecuteC()
 
 			assert.Error(t, err)
-			assert.Equal(t, test.expectedError, err)
+			assert.Equal(t, tt.expectedError, err)
 		})
 	}
 }

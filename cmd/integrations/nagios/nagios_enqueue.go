@@ -24,6 +24,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type nagiosEnqueueInput struct {
+	routingKey       string
+	notificationType string
+	sourceType       string
+	dedupKey         string
+	customFields     map[string]string
+}
+
 const defaultNagiosIntegrationSeverity = "error"
 
 var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
@@ -44,13 +52,7 @@ var nagiosToPagerDutyEventType = map[string]string{
 }
 
 func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
-	var customDetails map[string]string
-
-	var sourceType string
-
-	var sendEvent = eventsapi.EventV2{
-		Payload: eventsapi.PayloadV2{},
-	}
+	var cmdInputs nagiosEnqueueInput
 
 	requiredFlags := []string{"routing-key", "notification-type", "source-type"}
 
@@ -68,21 +70,21 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	%v
 		`, strings.Join(requiredFlags, ", "), strings.Join(requiredFields["host"], ", "), strings.Join(requiredFields["service"], ", ")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := validateNagiosSendCommand(sendEvent, sourceType, customDetails)
+			err := validateNagiosSendCommand(cmdInputs)
 			if err != nil {
 				return err
 			}
 
-			transformedSendEvent, transformedCustomDetails := nagiosTransformations(sendEvent, sourceType, customDetails)
-			return cmdutil.RunSendCommand(config, transformedSendEvent, transformedCustomDetails)
+			sendEvent, customDetails := buildSendEvent(cmdInputs)
+			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
 		},
 	}
 
-	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key (required)")
-	cmd.Flags().StringVarP(&sendEvent.EventAction, "notification-type", "t", "", "The Nagios notification type (required)")
-	cmd.Flags().StringVarP(&sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
-	cmd.Flags().StringVarP(&sendEvent.DedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
-	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+	cmd.Flags().StringVarP(&cmdInputs.routingKey, "routing-key", "k", "", "Service Events API Key (required)")
+	cmd.Flags().StringVarP(&cmdInputs.notificationType, "notification-type", "t", "", "The Nagios notification type (required)")
+	cmd.Flags().StringVarP(&cmdInputs.sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
+	cmd.Flags().StringVarP(&cmdInputs.dedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
+	cmd.Flags().StringToStringVarP(&cmdInputs.customFields, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
 	for _, flag := range requiredFlags {
 		cmd.MarkFlagRequired(flag)
@@ -91,47 +93,55 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func nagiosTransformations(
-	sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string,
-) (eventsapi.EventV2, map[string]string) {
-	sendEvent.Payload.Severity = defaultNagiosIntegrationSeverity
-	sendEvent.Payload.Summary = buildEventDescription(sourceType, customDetails)
-	sendEvent.EventAction = nagiosToPagerDutyEventType[sendEvent.EventAction]
-	sendEvent.Payload.Source = customDetails["HOSTNAME"]
+func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV2, map[string]string) {
+	sendEvent := eventsapi.EventV2{
+		RoutingKey:  cmdInputs.routingKey,
+		EventAction: nagiosToPagerDutyEventType[cmdInputs.notificationType],
+		DedupKey:    cmdInputs.dedupKey,
+		Payload: eventsapi.PayloadV2{
+			Summary:  buildEventDescription(cmdInputs),
+			Source:   cmdInputs.customFields["HOSTNAME"],
+			Severity: defaultNagiosIntegrationSeverity,
+		},
+	}
 	if sendEvent.DedupKey == "" {
-		sendEvent.DedupKey = buildDedupKey(sourceType, customDetails)
+		sendEvent.DedupKey = buildDedupKey(cmdInputs)
 	}
 
-	customDetails["pd_nagios_object"] = sourceType
+	customDetails := cmdInputs.customFields
+	customDetails["pd_nagios_object"] = cmdInputs.sourceType
 
 	return sendEvent, customDetails
 }
 
-func buildEventDescription(sourceType string, customDetails map[string]string) string {
+func buildEventDescription(cmdInputs nagiosEnqueueInput) string {
 	descriptionFields := []string{}
-	for _, field := range requiredFields[sourceType] {
-		descriptionFields = append(descriptionFields, fmt.Sprintf("%v=%v", field, customDetails[field]))
+	for _, field := range requiredFields[cmdInputs.sourceType] {
+		descriptionFields = append(descriptionFields, fmt.Sprintf("%v=%v", field, cmdInputs.customFields[field]))
 	}
 	return strings.Join(descriptionFields, "; ")
 }
 
-func buildDedupKey(sourceType string, customDetails map[string]string) string {
-	if sourceType == "host" {
-		return fmt.Sprintf("event_source=host;host_name=%v", customDetails["HOSTNAME"])
+func buildDedupKey(cmdInputs nagiosEnqueueInput) string {
+	if cmdInputs.sourceType == "host" {
+		return fmt.Sprintf("event_source=host;host_name=%v", cmdInputs.customFields["HOSTNAME"])
 	}
-	return fmt.Sprintf("event_source=service;host_name=%v;service_desc=%v", customDetails["HOSTNAME"], customDetails["SERVICEDESC"])
+	return fmt.Sprintf(
+		"event_source=service;host_name=%v;service_desc=%v",
+		cmdInputs.customFields["HOSTNAME"], cmdInputs.customFields["SERVICEDESC"],
+	)
 }
 
-func validateNagiosSendCommand(sendEvent eventsapi.EventV2, sourceType string, customDetails map[string]string) error {
-	if err := validateEnumField(sendEvent.EventAction, allowedNotificationTypes, errNotificationType); err != nil {
+func validateNagiosSendCommand(cmdInputs nagiosEnqueueInput) error {
+	if err := validateEnumField(cmdInputs.notificationType, allowedNotificationTypes, errNotificationType); err != nil {
 		return err
 	}
 
-	if err := validateEnumField(sourceType, allowedSourceTypes, errSourceType); err != nil {
+	if err := validateEnumField(cmdInputs.sourceType, allowedSourceTypes, errSourceType); err != nil {
 		return err
 	}
 
-	if err := validateCustomDetails(sourceType, customDetails); err != nil {
+	if err := validateCustomDetails(cmdInputs); err != nil {
 		return err
 	}
 
@@ -147,11 +157,11 @@ func validateEnumField(inputVal string, allowedValues []string, err error) error
 	return err
 }
 
-func validateCustomDetails(sourceType string, customDetails map[string]string) error {
-	requiredKeys := requiredFields[sourceType]
+func validateCustomDetails(cmdInputs nagiosEnqueueInput) error {
+	requiredKeys := requiredFields[cmdInputs.sourceType]
 	for _, key := range requiredKeys {
-		if _, ok := customDetails[key]; !ok {
-			return fmt.Errorf("the %v field must be set for source-type \"%v\" using the -f flag", key, sourceType)
+		if _, ok := cmdInputs.customFields[key]; !ok {
+			return fmt.Errorf("the %v field must be set for source-type \"%v\" using the -f flag", key, cmdInputs.sourceType)
 		}
 	}
 	return nil
