@@ -214,23 +214,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 
 			dedupKey := tt.cmdInputs.dedupKey
 			if dedupKey == "" {
-				if tt.cmdInputs.sourceType == "host" {
-					dedupKey = fmt.Sprintf("event_source=%v;host_name=%v", tt.cmdInputs.sourceType, tt.cmdInputs.customFields["HOSTNAME"])
-				} else {
-					dedupKey = fmt.Sprintf(
-						"event_source=%v;host_name=%v;service_desc=%v",
-						tt.cmdInputs.sourceType, tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["SERVICEDESC"],
-					)
-				}
-			}
-
-			var summary string
-			if tt.cmdInputs.sourceType == "host" {
-				summary = fmt.Sprintf("HOSTNAME=%v; HOSTSTATE=%v", tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["HOSTSTATE"])
-			} else {
-				summary = fmt.Sprintf(
-					"HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v",
-					tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["SERVICEDESC"], tt.cmdInputs.customFields["SERVICESTATE"])
+				dedupKey = buildDedupKey(tt.cmdInputs)
 			}
 
 			customDetails := map[string]string{
@@ -245,7 +229,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 				"event_action": nagiosToPagerDutyEventType[tt.cmdInputs.notificationType],
 				"dedup_key":    dedupKey,
 				"payload": map[string]interface{}{
-					"summary":        summary,
+					"summary":        buildEventDescription(tt.cmdInputs),
 					"source":         tt.cmdInputs.customFields["HOSTNAME"],
 					"severity":       defaultNagiosIntegrationSeverity,
 					"custom_details": customDetails,
