@@ -24,331 +24,258 @@ import (
 
 	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )
 
-func TestNagiosEnqueue_missingRequiredFlags(t *testing.T) {
-	realConfig := cmdutil.NewConfig()
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-
-	_, err := cmd.ExecuteC()
-
-	expectedErr := errors.New("required flag(s) \"notification-type\", \"routing-key\", \"source-type\" not set")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
+type nagiosEnqueueInput struct {
+	routingKey       string
+	notificationType string
+	sourceType       string
+	dedupKey         string
+	customFields     map[string]string
 }
 
-func TestNagiosEnqueue_invalidNotificationType(t *testing.T) {
-	realConfig := cmdutil.NewConfig()
-
-	const notificationType = "trigger"
-	const routingKey = "abc"
-	const sourceType = "host"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-	})
-
-	_, err := cmd.ExecuteC()
-
-	assert.Error(t, err)
-	assert.Equal(t, errNotificationType, err)
-}
-
-func TestNagiosEnqueue_invalidSourceType(t *testing.T) {
-	realConfig := cmdutil.NewConfig()
-
-	const notificationType = "PROBLEM"
-	const routingKey = "abc"
-	const sourceType = "invalidSourceType"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-	})
-
-	_, err := cmd.ExecuteC()
-
-	assert.Error(t, err)
-	assert.Equal(t, errSourceType, err)
-}
-
-func TestNagiosEnqueue_invalidServiceCustomDetails(t *testing.T) {
-	realConfig := cmdutil.NewConfig()
-
-	const notificationType = "RECOVERY"
-	const routingKey = "abc"
-	const sourceType = "service"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-	})
-
-	_, err := cmd.ExecuteC()
-
-	expectedErr := errors.New("the HOSTNAME field must be set for source-type \"service\" using the -f flag")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
-
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-f", "HOSTNAME=computer.network",
-	})
-
-	_, err = cmd.ExecuteC()
-
-	expectedErr = errors.New("the SERVICEDESC field must be set for source-type \"service\" using the -f flag")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
-
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-f", "HOSTNAME=computer.network",
-		"-f", "SERVICEDESC=a service",
-	})
-
-	_, err = cmd.ExecuteC()
-
-	expectedErr = errors.New("the SERVICESTATE field must be set for source-type \"service\" using the -f flag")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
-}
-
-func TestNagiosEnqueue_invalidHostCustomDetails(t *testing.T) {
-	realConfig := cmdutil.NewConfig()
-
-	const notificationType = "RECOVERY"
-	const routingKey = "abc"
-	const sourceType = "host"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-	})
-
-	_, err := cmd.ExecuteC()
-
-	expectedErr := errors.New("the HOSTNAME field must be set for source-type \"host\" using the -f flag")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
-
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-f", "HOSTNAME=computer.network",
-	})
-
-	_, err = cmd.ExecuteC()
-
-	expectedErr = errors.New("the HOSTSTATE field must be set for source-type \"host\" using the -f flag")
-	assert.Error(t, err)
-	assert.Equal(t, expectedErr, err)
-}
-
-func TestNagiosEnqueue_validSourceHostInput(t *testing.T) {
-	defer gock.Off()
-
-	defaultHTTPClient := &http.Client{
-		Timeout: 5 * time.Minute,
+func buildCmdArgs(inputs nagiosEnqueueInput) []string {
+	args := []string{}
+	flags := []struct {
+		flag string
+		val  string
+	}{
+		{"-k", inputs.routingKey}, {"-t", inputs.notificationType}, {"-n", inputs.sourceType}, {"-y", inputs.dedupKey},
 	}
-
-	realConfig := cmdutil.NewConfig()
-	realConfig.HttpClient = func() (*http.Client, error) {
-		return defaultHTTPClient, nil
+	for _, f := range flags {
+		if f.val != "" {
+			args = append(args, f.flag, f.val)
+		}
 	}
+	for k, v := range inputs.customFields {
+		args = append(args, "-f", fmt.Sprintf("%v=%v", k, v))
+	}
+	return args
+}
 
-	const notificationType = "PROBLEM"
-	const routingKey = "xyz"
-	const sourceType = "host"
-	const hostname = "computer.network"
-	const hoststate = "down"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
-		"-f", fmt.Sprintf("HOSTSTATE=%v", hoststate),
-	})
-
-	gock.New(cmdutil.GetDefaults().Address).
-		Post("/send").
-		JSON(map[string]interface{}{
-			"routing_key":  routingKey,
-			"event_action": nagiosToPagerDutyEventType[notificationType],
-			"dedup_key":    fmt.Sprintf("event_source=%v;host_name=%v", sourceType, hostname),
-			"payload": map[string]interface{}{
-				"summary":  fmt.Sprintf("HOSTNAME=%v; HOSTSTATE=%v", hostname, hoststate),
-				"source":   hostname,
-				"severity": defaultNagiosIntegrationSeverity,
-				"custom_details": map[string]string{
-					"pd_nagios_object": sourceType,
-					"HOSTNAME":         hostname,
-					"HOSTSTATE":        hoststate,
+func TestNagiosEnqueue_errors(t *testing.T) {
+	tests := []struct {
+		name          string
+		inputs        nagiosEnqueueInput
+		expectedError error
+	}{
+		{
+			name:          "missingRequiredFlags",
+			inputs:        nagiosEnqueueInput{},
+			expectedError: errors.New("required flag(s) \"notification-type\", \"routing-key\", \"source-type\" not set"),
+		},
+		{
+			name: "invalidNotficationType",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "trigger",
+				sourceType:       "host",
+			},
+			expectedError: errNotificationType,
+		},
+		{
+			name: "invalidSourceType",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "PROBLEM",
+				sourceType:       "invalidSourceType",
+			},
+			expectedError: errSourceType,
+		},
+		{
+			name: "hostnameNotSetServiceCustomDetails",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "RECOVERY",
+				sourceType:       "service",
+			},
+			expectedError: errors.New("the HOSTNAME field must be set for source-type \"service\" using the -f flag"),
+		},
+		{
+			name: "serviceDescNotSetServiceCustomDetails",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "RECOVERY",
+				sourceType:       "service",
+				customFields: map[string]string{
+					"HOSTNAME": "computer.network",
 				},
 			},
-		}).
-		Reply(200).
-		JSON(map[string]interface{}{"key": routingKey})
-
-	gock.InterceptClient(defaultHTTPClient)
-
-	out, err := test.CaptureStdout(func() error {
-		_, err := cmd.ExecuteC()
-		return err
-	})
-
-	if err != nil {
-		t.Errorf("error running command `enqueue`: %v", err)
-	}
-
-	assert.Contains(t, out, `{"key":"xyz"}`)
-}
-
-func TestNagiosEnqueue_validSourceServiceInput(t *testing.T) {
-	defer gock.Off()
-
-	defaultHTTPClient := &http.Client{
-		Timeout: 5 * time.Minute,
-	}
-
-	realConfig := cmdutil.NewConfig()
-	realConfig.HttpClient = func() (*http.Client, error) {
-		return defaultHTTPClient, nil
-	}
-
-	const notificationType = "PROBLEM"
-	const routingKey = "xyz"
-	const sourceType = "service"
-	const hostname = "computer.network"
-	const serviceDesc = "some service desc"
-	const serviceState = "down"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
-		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
-		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
-	})
-
-	gock.New(cmdutil.GetDefaults().Address).
-		Post("/send").
-		JSON(map[string]interface{}{
-			"routing_key":  routingKey,
-			"event_action": nagiosToPagerDutyEventType[notificationType],
-			"dedup_key":    fmt.Sprintf("event_source=%v;host_name=%v;service_desc=%v", sourceType, hostname, serviceDesc),
-			"payload": map[string]interface{}{
-				"summary":  fmt.Sprintf("HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v", hostname, serviceDesc, serviceState),
-				"source":   hostname,
-				"severity": defaultNagiosIntegrationSeverity,
-				"custom_details": map[string]string{
-					"pd_nagios_object": sourceType,
-					"HOSTNAME":         hostname,
-					"SERVICEDESC":      serviceDesc,
-					"SERVICESTATE":     serviceState,
+			expectedError: errors.New("the SERVICEDESC field must be set for source-type \"service\" using the -f flag"),
+		},
+		{
+			name: "serviceStateNotSetServiceCustomDetails",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "RECOVERY",
+				sourceType:       "service",
+				customFields: map[string]string{
+					"HOSTNAME":    "computer.network",
+					"SERVICEDESC": "a service",
 				},
 			},
-		}).
-		Reply(200).
-		JSON(map[string]interface{}{"key": routingKey})
-
-	gock.InterceptClient(defaultHTTPClient)
-
-	out, err := test.CaptureStdout(func() error {
-		_, err := cmd.ExecuteC()
-		return err
-	})
-
-	if err != nil {
-		t.Errorf("error running command `enqueue`: %v", err)
-	}
-
-	assert.Contains(t, out, `{"key":"xyz"}`)
-}
-
-func TestNagiosEnqueue_userProvidedDedupKey(t *testing.T) {
-	defer gock.Off()
-
-	defaultHTTPClient := &http.Client{
-		Timeout: 5 * time.Minute,
-	}
-
-	realConfig := cmdutil.NewConfig()
-	realConfig.HttpClient = func() (*http.Client, error) {
-		return defaultHTTPClient, nil
-	}
-
-	const notificationType = "PROBLEM"
-	const routingKey = "xyz"
-	const sourceType = "service"
-	const hostname = "computer.network"
-	const serviceDesc = "some service desc"
-	const serviceState = "down"
-	const dedupKey = "someDedupKey"
-
-	cmd := NewNagiosEnqueueCmd(realConfig)
-	cmd.SetArgs([]string{
-		"-k", routingKey,
-		"-t", notificationType,
-		"-n", sourceType,
-		"-y", dedupKey,
-		"-f", fmt.Sprintf("HOSTNAME=%v", hostname),
-		"-f", fmt.Sprintf("SERVICEDESC=%v", serviceDesc),
-		"-f", fmt.Sprintf("SERVICESTATE=%v", serviceState),
-	})
-
-	gock.New(cmdutil.GetDefaults().Address).
-		Post("/send").
-		JSON(map[string]interface{}{
-			"routing_key":  routingKey,
-			"event_action": nagiosToPagerDutyEventType[notificationType],
-			"dedup_key":    dedupKey,
-			"payload": map[string]interface{}{
-				"summary":  fmt.Sprintf("HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v", hostname, serviceDesc, serviceState),
-				"source":   hostname,
-				"severity": defaultNagiosIntegrationSeverity,
-				"custom_details": map[string]string{
-					"pd_nagios_object": sourceType,
-					"HOSTNAME":         hostname,
-					"SERVICEDESC":      serviceDesc,
-					"SERVICESTATE":     serviceState,
+			expectedError: errors.New("the SERVICESTATE field must be set for source-type \"service\" using the -f flag"),
+		},
+		{
+			name: "hostnameNotSetHostCustomDetails",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "RECOVERY",
+				sourceType:       "host",
+			},
+			expectedError: errors.New("the HOSTNAME field must be set for source-type \"host\" using the -f flag"),
+		},
+		{
+			name: "hoststateNotSetHostCustomDetails",
+			inputs: nagiosEnqueueInput{
+				routingKey:       "abc",
+				notificationType: "RECOVERY",
+				sourceType:       "host",
+				customFields: map[string]string{
+					"HOSTNAME": "computer.network",
 				},
 			},
-		}).
-		Reply(200).
-		JSON(map[string]interface{}{"key": routingKey})
-
-	gock.InterceptClient(defaultHTTPClient)
-
-	out, err := test.CaptureStdout(func() error {
-		_, err := cmd.ExecuteC()
-		return err
-	})
-
-	if err != nil {
-		t.Errorf("error running command `enqueue`: %v", err)
+			expectedError: errors.New("the HOSTSTATE field must be set for source-type \"host\" using the -f flag"),
+		},
 	}
 
-	assert.Contains(t, out, `{"key":"xyz"}`)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			realConfig := cmdutil.NewConfig()
+
+			cmd := NewNagiosEnqueueCmd(realConfig)
+			cmd.SetArgs(buildCmdArgs(test.inputs))
+
+			_, err := cmd.ExecuteC()
+
+			assert.Error(t, err)
+			assert.Equal(t, test.expectedError, err)
+		})
+	}
+}
+
+func TestNagiosEnqueue_validInputs(t *testing.T) {
+	tests := []struct {
+		name      string
+		cmdInputs nagiosEnqueueInput
+	}{
+		{
+			name: "validSourceHostInput",
+			cmdInputs: nagiosEnqueueInput{
+				routingKey:       "xyz",
+				notificationType: "PROBLEM",
+				sourceType:       "host",
+				customFields: map[string]string{
+					"HOSTNAME":  "computer.network",
+					"HOSTSTATE": "down",
+				},
+			},
+		},
+		{
+			name: "validSourceServiceInput",
+			cmdInputs: nagiosEnqueueInput{
+				routingKey:       "xyz",
+				notificationType: "PROBLEM",
+				sourceType:       "service",
+				customFields: map[string]string{
+					"HOSTNAME":     "computer.network",
+					"SERVICESTATE": "down",
+					"SERVICEDESC":  "serviceA",
+				},
+			},
+		},
+		{
+			name: "userProvidedDedupKey",
+			cmdInputs: nagiosEnqueueInput{
+				routingKey:       "xyz",
+				notificationType: "PROBLEM",
+				sourceType:       "service",
+				dedupKey:         "somededupkey",
+				customFields: map[string]string{
+					"HOSTNAME":     "computer.network",
+					"SERVICESTATE": "down",
+					"SERVICEDESC":  "serviceA",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			viper.SetDefault("address", cmdutil.GetDefaults().Address)
+			defer gock.Off()
+
+			defaultHTTPClient := &http.Client{
+				Timeout: 5 * time.Minute,
+			}
+
+			realConfig := cmdutil.NewConfig()
+			realConfig.HttpClient = func() (*http.Client, error) {
+				return defaultHTTPClient, nil
+			}
+
+			cmd := NewNagiosEnqueueCmd(realConfig)
+			cmd.SetArgs(buildCmdArgs(tt.cmdInputs))
+
+			dedupKey := tt.cmdInputs.dedupKey
+			if dedupKey == "" {
+				if tt.cmdInputs.sourceType == "host" {
+					dedupKey = fmt.Sprintf("event_source=%v;host_name=%v", tt.cmdInputs.sourceType, tt.cmdInputs.customFields["HOSTNAME"])
+				} else {
+					dedupKey = fmt.Sprintf(
+						"event_source=%v;host_name=%v;service_desc=%v",
+						tt.cmdInputs.sourceType, tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["SERVICEDESC"],
+					)
+				}
+			}
+
+			var summary string
+			if tt.cmdInputs.sourceType == "host" {
+				summary = fmt.Sprintf("HOSTNAME=%v; HOSTSTATE=%v", tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["HOSTSTATE"])
+			} else {
+				summary = fmt.Sprintf(
+					"HOSTNAME=%v; SERVICEDESC=%v; SERVICESTATE=%v",
+					tt.cmdInputs.customFields["HOSTNAME"], tt.cmdInputs.customFields["SERVICEDESC"], tt.cmdInputs.customFields["SERVICESTATE"])
+			}
+
+			customDetails := map[string]string{
+				"pd_nagios_object": tt.cmdInputs.sourceType,
+			}
+			for k, v := range tt.cmdInputs.customFields {
+				customDetails[k] = v
+			}
+
+			expectedRequestBody := map[string]interface{}{
+				"routing_key":  tt.cmdInputs.routingKey,
+				"event_action": nagiosToPagerDutyEventType[tt.cmdInputs.notificationType],
+				"dedup_key":    dedupKey,
+				"payload": map[string]interface{}{
+					"summary":        summary,
+					"source":         tt.cmdInputs.customFields["HOSTNAME"],
+					"severity":       defaultNagiosIntegrationSeverity,
+					"custom_details": customDetails,
+				},
+			}
+
+			gock.New(cmdutil.GetDefaults().Address).
+				Post("/send").JSON(expectedRequestBody).
+				Reply(200).JSON(map[string]interface{}{"key": tt.cmdInputs.routingKey})
+
+			gock.InterceptClient(defaultHTTPClient)
+
+			out, err := test.CaptureStdout(func() error {
+				_, err := cmd.ExecuteC()
+				return err
+			})
+
+			if err != nil {
+				t.Errorf("error running command `enqueue`: %v", err)
+			}
+
+			assert.Contains(t, out, fmt.Sprintf(`{"key":"%v"}`, tt.cmdInputs.routingKey))
+		})
+	}
 }

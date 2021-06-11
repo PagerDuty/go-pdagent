@@ -41,11 +41,7 @@ func NewConfig() *Config {
 		HttpClient: httpClientFunc,
 		Client: func() (*client.Client, error) {
 			httpClient, _ := httpClientFunc()
-			address := viper.GetString("address")
-			if address == "" {
-				address = GetDefaults().Address
-			}
-			c := client.NewClient(httpClient, address, viper.GetString("secret"))
+			c := client.NewClient(httpClient, viper.GetString("address"), viper.GetString("secret"))
 			return c, nil
 		},
 	}
