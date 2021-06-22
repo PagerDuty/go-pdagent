@@ -52,7 +52,7 @@ var nagiosToPagerDutyEventType = map[string]string{
 }
 
 func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
-	var cmdInputs nagiosEnqueueInput
+	var cmdInput nagiosEnqueueInput
 
 	requiredFlags := []string{"routing-key", "notification-type", "source-type"}
 
@@ -70,21 +70,21 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	%v
 		`, strings.Join(requiredFlags, ", "), strings.Join(requiredFields["host"], ", "), strings.Join(requiredFields["service"], ", ")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := validateNagiosSendCommand(cmdInputs)
+			err := validateNagiosSendCommand(cmdInput)
 			if err != nil {
 				return err
 			}
 
-			sendEvent, customDetails := buildSendEvent(cmdInputs)
+			sendEvent, customDetails := buildSendEvent(cmdInput)
 			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
 		},
 	}
 
-	cmd.Flags().StringVarP(&cmdInputs.routingKey, "routing-key", "k", "", "Service Events API Key (required)")
-	cmd.Flags().StringVarP(&cmdInputs.notificationType, "notification-type", "t", "", "The Nagios notification type (required)")
-	cmd.Flags().StringVarP(&cmdInputs.sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
-	cmd.Flags().StringVarP(&cmdInputs.dedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
-	cmd.Flags().StringToStringVarP(&cmdInputs.customFields, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+	cmd.Flags().StringVarP(&cmdInput.routingKey, "routing-key", "k", "", "Service Events API Key (required)")
+	cmd.Flags().StringVarP(&cmdInput.notificationType, "notification-type", "t", "", "The Nagios notification type (required)")
+	cmd.Flags().StringVarP(&cmdInput.sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
+	cmd.Flags().StringVarP(&cmdInput.dedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
+	cmd.Flags().StringToStringVarP(&cmdInput.customFields, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
 	for _, flag := range requiredFlags {
 		cmd.MarkFlagRequired(flag)
