@@ -24,7 +24,6 @@ import (
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )
@@ -136,6 +135,8 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			test.InitConfigForIntegrationsTesting()
+
 			realConfig := cmdutil.NewConfig()
 
 			cmd := NewNagiosEnqueueCmd(realConfig)
@@ -197,7 +198,8 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viper.SetDefault("address", cmdutil.GetDefaults().Address)
+			test.InitConfigForIntegrationsTesting()
+
 			defer gock.Off()
 
 			defaultHTTPClient := &http.Client{

@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
 var rootCmd *cobra.Command
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,7 +42,7 @@ func init() {
 	config := cmdutil.NewConfig()
 
 	rootCmd = NewRootCmd(config)
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(cmdutil.InitConfig)
 }
 
 func NewRootCmd(config *cmdutil.Config) *cobra.Command {
@@ -66,7 +65,7 @@ func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 	rootCmd.Version = common.Version
 
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
+	pflags.StringVar(&cmdutil.CfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
 	pflags.StringP("address", "a", defaults.Address, "address to run and access the agent server on.")
 	pflags.String("pidfile", defaults.Pidfile, "pidfile for the currently running pdagent instance, if any.")
 	pflags.StringP("secret", "s", defaults.Secret, "secret used to authorize agent access.")
@@ -93,22 +92,4 @@ func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 	rootCmd.AddCommand(nagios.NewNagiosCmd(config))
 
 	return rootCmd
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// We add both production and dev paths here such that either config
-		// will be automatically picked up.
-		viper.AddConfigPath("/etc/pdagent/")
-		viper.AddConfigPath(cmdutil.GetDefaultConfigPath())
-		viper.SetConfigName("config")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	_ = viper.ReadInConfig()
 }

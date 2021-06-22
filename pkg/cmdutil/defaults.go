@@ -45,7 +45,7 @@ func GetDefaults() Defaults {
 		}
 	}
 
-	configPath := GetDefaultConfigPath()
+	configPath := getDefaultConfigPath()
 
 	return Defaults{
 		Address:    "127.0.0.1:49463",
@@ -56,7 +56,7 @@ func GetDefaults() Defaults {
 	}
 }
 
-func GetDefaultConfigPath() string {
+func getDefaultConfigPath() string {
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)

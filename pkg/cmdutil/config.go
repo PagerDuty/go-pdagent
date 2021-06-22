@@ -23,6 +23,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var CfgFile string
+
 type Config struct {
 	HttpClient func() (*http.Client, error)
 	Client     func() (*client.Client, error)
@@ -45,4 +47,22 @@ func NewConfig() *Config {
 			return c, nil
 		},
 	}
+}
+
+// InitConfig reads in config file and ENV variables if set.
+func InitConfig() {
+	if CfgFile != "" {
+		viper.SetConfigFile(CfgFile)
+	} else {
+		// We add both production and dev paths here such that either config
+		// will be automatically picked up.
+		viper.AddConfigPath("/etc/pdagent/")
+		viper.AddConfigPath(getDefaultConfigPath())
+		viper.SetConfigName("config")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	_ = viper.ReadInConfig()
 }
