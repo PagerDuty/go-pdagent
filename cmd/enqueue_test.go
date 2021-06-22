@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"

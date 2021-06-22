@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
 	"github.com/PagerDuty/go-pdagent/pkg/server"
 	"github.com/spf13/cobra"

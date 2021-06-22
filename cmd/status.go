@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/spf13/cobra"
 )
 

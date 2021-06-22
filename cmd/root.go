@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
 	"github.com/PagerDuty/go-pdagent/cmd/integrations/nagios"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 
 	"github.com/spf13/cobra"

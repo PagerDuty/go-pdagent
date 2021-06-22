@@ -20,7 +20,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/spf13/viper"
 

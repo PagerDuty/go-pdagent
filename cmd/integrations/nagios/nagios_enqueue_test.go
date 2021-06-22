@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
