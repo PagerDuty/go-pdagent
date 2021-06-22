@@ -16,9 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"fmt"
+	"os"
 
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewServerStopCmd() *cobra.Command {
@@ -26,9 +29,27 @@ func NewServerStopCmd() *cobra.Command {
 		Use:   "stop",
 		Short: "Gracefully stop a running pdagent server.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunStopCommand()
+			return runStopCommand()
 		},
 	}
 
 	return cmd
+}
+
+func runStopCommand() error {
+	pidfile := viper.GetString("pidfile")
+
+	if err := common.TerminateProcess(pidfile); err != nil {
+		fmt.Printf("Error terminating server: %v\n", err)
+
+		if err == common.ErrPidfileDoesntExist {
+			fmt.Println("This normally means a server isn't currently running, or you're running this command using a different configuration.")
+		}
+
+		os.Exit(1)
+	}
+
+	fmt.Println("Server terminated.")
+	os.Exit(0)
+	return nil
 }

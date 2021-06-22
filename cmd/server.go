@@ -17,8 +17,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/PagerDuty/go-pdagent/cmd/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
+	"github.com/PagerDuty/go-pdagent/pkg/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,7 +33,7 @@ func NewServerCmd() *cobra.Command {
 		Short: "Start the server daemon.",
 		Long:  `Starts the daemon server and begins processing any event backlog.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunServerCommand()
+			return runServerCommand()
 		},
 	}
 
@@ -44,4 +47,22 @@ func NewServerCmd() *cobra.Command {
 	cmd.AddCommand(NewServerStopCmd())
 
 	return cmd
+}
+
+func runServerCommand() error {
+	address := viper.GetString("address")
+	database := viper.GetString("database")
+	pidfile := viper.GetString("pidfile")
+	secret := viper.GetString("secret")
+
+	queue := persistentqueue.NewPersistentQueue(persistentqueue.WithFile(database))
+
+	server := server.NewServer(address, secret, pidfile, queue)
+	err := server.Start()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	return nil
 }
