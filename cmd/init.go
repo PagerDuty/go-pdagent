@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/spf13/viper"
 
@@ -35,7 +36,7 @@ func NewInitCmd() *cobra.Command {
 	Can be run without options to automatically generate defaults, or will use
 	configuration options or an existing config as its basis.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			defaults := getDefaults()
+			defaults := cmdutil.GetDefaults()
 			configFile := path.Join(defaults.ConfigPath, "config.yaml")
 
 			if common.IsProduction() {

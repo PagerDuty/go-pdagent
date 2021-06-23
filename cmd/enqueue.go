@@ -16,14 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
-
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
 
-func NewEnqueueCmd(config *Config) *cobra.Command {
+func NewEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	var customDetails map[string]string
 
 	var sendEvent = eventsapi.EventV2{
@@ -34,7 +32,7 @@ func NewEnqueueCmd(config *Config) *cobra.Command {
 		Use:   "enqueue",
 		Short: "Queue up a trigger, acknowledge, or resolve v2 event to PagerDuty",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runSendCommand(config, sendEvent, customDetails)
+			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
 		},
 	}
 
@@ -50,28 +48,4 @@ func NewEnqueueCmd(config *Config) *cobra.Command {
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
 	return cmd
-}
-
-func runSendCommand(config *Config, sendEvent eventsapi.EventV2, customDetails map[string]string) error {
-	c, _ := config.Client()
-
-	// Manually mapping as a workaround for the map type mismatch.
-	sendEvent.Payload.CustomDetails = map[string]interface{}{}
-	for k, v := range customDetails {
-		sendEvent.Payload.CustomDetails[k] = v
-	}
-
-	resp, err := c.Send(sendEvent)
-	if err != nil {
-		return err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	fmt.Println(string(respBody))
-	return nil
 }

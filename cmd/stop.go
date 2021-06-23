@@ -20,9 +20,8 @@ import (
 	"os"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
-	"github.com/spf13/viper"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewServerStopCmd() *cobra.Command {

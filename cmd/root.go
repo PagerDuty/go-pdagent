@@ -18,16 +18,15 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path"
 
+	"github.com/PagerDuty/go-pdagent/cmd/integrations/nagios"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
 var rootCmd *cobra.Command
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -40,13 +39,13 @@ func Execute() {
 }
 
 func init() {
-	config := New()
+	config := cmdutil.NewConfig()
 
 	rootCmd = NewRootCmd(config)
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(cmdutil.InitConfig)
 }
 
-func NewRootCmd(config *Config) *cobra.Command {
+func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "pdagent",
 		Short: "PagerDuty Agent CLI",
@@ -62,11 +61,11 @@ func NewRootCmd(config *Config) *cobra.Command {
 		SilenceUsage:  true,
 	}
 
-	defaults := getDefaults()
+	defaults := cmdutil.GetDefaults()
 	rootCmd.Version = common.Version
 
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
+	pflags.StringVar(&cmdutil.CfgFile, "config", "", "config file (default is $HOME/.go-pdagent.yaml)")
 	pflags.StringP("address", "a", defaults.Address, "address to run and access the agent server on.")
 	pflags.String("pidfile", defaults.Pidfile, "pidfile for the currently running pdagent instance, if any.")
 	pflags.StringP("secret", "s", defaults.Secret, "secret used to authorize agent access.")
@@ -90,66 +89,7 @@ func NewRootCmd(config *Config) *cobra.Command {
 	rootCmd.AddCommand(NewSendCmd(config))
 	rootCmd.AddCommand(NewServerCmd())
 	rootCmd.AddCommand(NewVersionCmd())
-	rootCmd.AddCommand(NewNagiosCmd(config))
+	rootCmd.AddCommand(nagios.NewNagiosCmd(config))
 
 	return rootCmd
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// We add both production and dev paths here such that either config
-		// will be automatically picked up.
-		viper.AddConfigPath("/etc/pdagent/")
-		viper.AddConfigPath(getDefaultConfigPath())
-		viper.SetConfigName("config")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	_ = viper.ReadInConfig()
-}
-
-type Defaults struct {
-	Address    string
-	ConfigPath string
-	Database   string
-	Pidfile    string
-	Secret     string
-}
-
-func getDefaults() Defaults {
-	prod := common.IsProduction()
-
-	if prod {
-		return Defaults{
-			Address:    "127.0.0.1:49463",
-			ConfigPath: "/etc/pdagent/",
-			Database:   "/var/db/pdagent/pdagent.db",
-			Pidfile:    "/var/run/pdagent/pidfile",
-			Secret:     common.GenerateKey(),
-		}
-	}
-
-	configPath := getDefaultConfigPath()
-
-	return Defaults{
-		Address:    "127.0.0.1:49463",
-		ConfigPath: configPath,
-		Database:   path.Join(configPath, "pdagent.db"),
-		Pidfile:    path.Join(configPath, "pidfile"),
-		Secret:     common.GenerateKey(),
-	}
-}
-
-func getDefaultConfigPath() string {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return path.Join(home, ".pdagent")
 }

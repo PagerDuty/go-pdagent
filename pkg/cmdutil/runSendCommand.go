@@ -13,46 +13,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package cmdutil
 
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
-	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
-	"github.com/spf13/cobra"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
-func NewQueueRetryCmd(config *cmdutil.Config) *cobra.Command {
-	var routingKey string
-
-	cmd := &cobra.Command{
-		Use:   "retry",
-		Short: "Retry failed events.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRetryCommand(config, routingKey)
-		},
-	}
-
-	cmd.Flags().StringVarP(&routingKey, "routing-key", "k", "", "The Events API Key to check")
-
-	return cmd
-}
-
-func runRetryCommand(config *cmdutil.Config, routingKey string) error {
+func RunSendCommand(config *Config, sendEvent eventsapi.EventV2, customDetails map[string]string) error {
 	c, _ := config.Client()
 
-	resp, err := c.QueueRetry(routingKey)
+	// Manually mapping as a workaround for the map type mismatch.
+	sendEvent.Payload.CustomDetails = map[string]interface{}{}
+	for k, v := range customDetails {
+		sendEvent.Payload.CustomDetails[k] = v
+	}
+
+	resp, err := c.Send(sendEvent)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println(string(respBody))

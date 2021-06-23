@@ -20,10 +20,11 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/spf13/cobra"
 )
 
-func NewQueueStatusCmd(config *Config) *cobra.Command {
+func NewQueueStatusCmd(config *cmdutil.Config) *cobra.Command {
 	var routingKey string
 
 	cmd := &cobra.Command{
@@ -39,7 +40,7 @@ func NewQueueStatusCmd(config *Config) *cobra.Command {
 	return cmd
 }
 
-func runStatusCommand(config *Config, routingKey string) error {
+func runStatusCommand(config *cmdutil.Config, routingKey string) error {
 	c, _ := config.Client()
 
 	resp, err := c.QueueStatus(routingKey)

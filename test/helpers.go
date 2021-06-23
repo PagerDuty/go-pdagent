@@ -19,6 +19,9 @@ import (
 	"bytes"
 	"io"
 	"os"
+
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/spf13/viper"
 )
 
 func CaptureStdout(f func() error) (string, error) {
@@ -35,4 +38,16 @@ func CaptureStdout(f func() error) (string, error) {
 	io.Copy(&buf, r)
 
 	return buf.String(), err
+}
+
+// InitConfigForIntegrationsTesting initializes config for testing pdagent integrations
+// that would normally get set in the `cmd` package init() function.
+func InitConfigForIntegrationsTesting() {
+	// Set defaults that would normally get set using the root command's persistent fllags
+	viper.SetDefault("address", cmdutil.GetDefaults().Address)
+	viper.SetDefault("pidfile", cmdutil.GetDefaults().Pidfile)
+	viper.SetDefault("secret", cmdutil.GetDefaults().Secret)
+
+	// Load normal config from environment variables and config files
+	cmdutil.InitConfig()
 }

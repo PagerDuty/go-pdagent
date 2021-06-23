@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/persistentqueue"
 	"github.com/PagerDuty/go-pdagent/pkg/server"
 	"github.com/spf13/cobra"
@@ -36,7 +37,7 @@ func NewServerCmd() *cobra.Command {
 		},
 	}
 
-	defaults := getDefaults()
+	defaults := cmdutil.GetDefaults()
 
 	cmd.PersistentFlags().String("database", defaults.Database, "database file for event queuing (default is /var/db/pdagent/agent.db)")
 	if err := viper.BindPFlag("database", cmd.PersistentFlags().Lookup("database")); err != nil {

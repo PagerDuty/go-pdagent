@@ -16,10 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/spf13/cobra"
 )
 
-func NewQueueCmd(config *Config) *cobra.Command {
+func NewQueueCmd(config *cmdutil.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "queue",
 		Short: "Access the daemon's event queue.",
