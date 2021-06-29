@@ -75,8 +75,9 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 				return err
 			}
 
-			sendEvent, customDetails := buildSendEvent(cmdInput)
-			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
+			sendEvent := buildSendEvent(cmdInput)
+
+			return cmdutil.RunSendCommand(config, sendEvent, eventsapi.EventVersion2)
 		},
 	}
 
@@ -93,7 +94,7 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV2, map[string]string) {
+func buildSendEvent(cmdInputs nagiosEnqueueInput) eventsapi.EventV2 {
 	sendEvent := eventsapi.EventV2{
 		RoutingKey:  cmdInputs.routingKey,
 		EventAction: nagiosToPagerDutyEventType[cmdInputs.notificationType],
@@ -111,7 +112,13 @@ func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV2, map[string
 	customDetails := cmdInputs.customFields
 	customDetails["pd_nagios_object"] = cmdInputs.sourceType
 
-	return sendEvent, customDetails
+	// Manually mapping as a workaround for the map type mismatch.
+	sendEvent.Payload.CustomDetails = map[string]interface{}{}
+	for k, v := range customDetails {
+		sendEvent.Payload.CustomDetails[k] = v
+	}
+
+	return sendEvent
 }
 
 func buildEventDescription(cmdInputs nagiosEnqueueInput) string {

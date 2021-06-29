@@ -32,7 +32,13 @@ func NewEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 		Use:   "enqueue",
 		Short: "Queue up a trigger, acknowledge, or resolve v2 event to PagerDuty",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
+			// Manually mapping as a workaround for the map type mismatch.
+			sendEvent.Payload.CustomDetails = map[string]interface{}{}
+			for k, v := range customDetails {
+				sendEvent.Payload.CustomDetails[k] = v
+			}
+
+			return cmdutil.RunSendCommand(config, sendEvent, eventsapi.EventVersion2)
 		},
 	}
 

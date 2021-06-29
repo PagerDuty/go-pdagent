@@ -20,17 +20,20 @@ func TestPersistentQueueSimple(t *testing.T) {
 		t.Fatal("Error starting persistent queue.")
 	}
 
-	event := eventsapi.EventV2{
-		RoutingKey:  "11863b592c824bfc8989d9cba76abcde",
-		EventAction: "trigger",
-		Payload: eventsapi.PayloadV2{
-			Summary:  "PagerDuty Agent `CreateV1` Test",
-			Source:   "pdagent",
-			Severity: "error",
+	genericEvent := eventsapi.GenericEvent{
+		EventVersion: eventsapi.EventVersion2,
+		EventData: map[string]interface{}{
+			"routing_key":  "11863b592c824bfc8989d9cba76abcde",
+			"event_action": "trigger",
+			"payload": map[string]interface{}{
+				"summary":  "PagerDuty Agent `CreateV1` Test",
+				"source":   "pdagent",
+				"severity": "error",
+			},
 		},
 	}
 
-	key, err := q.Enqueue(&event)
+	key, err := q.Enqueue(&genericEvent)
 	if err != nil {
 		t.Fatal(err)
 	}

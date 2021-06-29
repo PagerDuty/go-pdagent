@@ -18,17 +18,20 @@ func TestEvent(t *testing.T) {
 
 	eventsDb := db.From("events")
 
-	eventAPIEvent := eventsapi.EventV2{
-		RoutingKey:  "11863b592c824bfc8989d9cba76abcde",
-		EventAction: "trigger",
-		Payload: eventsapi.PayloadV2{
-			Summary:  "PagerDuty Agent `CreateV1` Test",
-			Source:   "pdagent",
-			Severity: "error",
+	genericEvent := eventsapi.GenericEvent{
+		EventVersion: eventsapi.EventVersion2,
+		EventData: map[string]interface{}{
+			"routing_key":  "11863b592c824bfc8989d9cba76abcde",
+			"event_action": "trigger",
+			"payload": map[string]interface{}{
+				"summary":  "PagerDuty Agent `CreateV1` Test",
+				"source":   "pdagent",
+				"severity": "error",
+			},
 		},
 	}
 
-	event, err := NewEvent(&eventAPIEvent)
+	event, err := NewEvent(&genericEvent)
 	if err != nil {
 		t.Fatal(err)
 	}

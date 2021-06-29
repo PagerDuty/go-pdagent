@@ -12,6 +12,17 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
+type EventVersion int
+
+const (
+	EventVersion1 EventVersion = iota
+	EventVersion2
+)
+
+func (ev EventVersion) String() string {
+	return []string{"v1", "v2"}[ev]
+}
+
 var ErrInvalidRoutingKey = errors.New("invalid routing key")
 
 // ErrUnrecognizedEventType occurs when an event isn't supported by the events
@@ -85,6 +96,14 @@ func Enqueue(context context.Context, event Event, options ...EnqueueOption) (Re
 	}
 
 	switch e := event.(type) {
+	case *GenericEvent:
+		if e.EventVersion == EventVersion1 {
+			specificEvent := e.getSpecificV1EventStruct()
+			return CreateV1(context, config.HTTPClient, &specificEvent)
+		} else {
+			specificEvent := e.getSpecificV2EventStruct()
+			return EnqueueV2(context, config.HTTPClient, &specificEvent)
+		}
 	case *EventV1:
 		return CreateV1(context, config.HTTPClient, e)
 	case *EventV2:

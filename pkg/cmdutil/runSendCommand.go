@@ -22,16 +22,10 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
-func RunSendCommand(config *Config, sendEvent eventsapi.EventV2, customDetails map[string]string) error {
+func RunSendCommand(config *Config, sendEvent eventsapi.Event, eventVersion eventsapi.EventVersion) error {
 	c, _ := config.Client()
 
-	// Manually mapping as a workaround for the map type mismatch.
-	sendEvent.Payload.CustomDetails = map[string]interface{}{}
-	for k, v := range customDetails {
-		sendEvent.Payload.CustomDetails[k] = v
-	}
-
-	resp, err := c.Send(sendEvent)
+	resp, err := c.Send(sendEvent, eventVersion)
 	if err != nil {
 		return err
 	}

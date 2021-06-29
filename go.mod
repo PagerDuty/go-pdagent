@@ -6,12 +6,11 @@ require (
 	github.com/DataDog/zstd v1.4.4 // indirect
 	github.com/Sereal/Sereal v0.0.0-20200326150110-2c0ed69a855f // indirect
 	github.com/asdine/storm v2.1.2+incompatible
-	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.7.4
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
