@@ -10,7 +10,6 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

@@ -12,17 +12,6 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-type EventVersion int
-
-const (
-	EventVersion1 EventVersion = iota
-	EventVersion2
-)
-
-func (ev EventVersion) String() string {
-	return []string{"v1", "v2"}[ev]
-}
-
 var ErrInvalidRoutingKey = errors.New("invalid routing key")
 
 // ErrUnrecognizedEventType occurs when an event isn't supported by the events

@@ -17,11 +17,8 @@ func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {
 
 	s.logger.Debugf("/send payload: %v", string(body))
 
-	var event eventsapi.GenericEvent
-	if req.Header["Pd-Event-Version"][0] == eventsapi.EventVersion1.String() {
-		event.EventVersion = eventsapi.EventVersion1
-	} else {
-		event.EventVersion = eventsapi.EventVersion2
+	event := eventsapi.GenericEvent{
+		EventVersion: eventsapi.StringToEventVersion[req.Header["Pd-Event-Version"][0]],
 	}
 
 	if err = json.Unmarshal(body, &event.EventData); err != nil {
@@ -30,7 +27,6 @@ func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	key, err := s.Queue.Enqueue(&event)
-
 	if err != nil {
 		errorResp(rw, 500, []string{err.Error()})
 		return
