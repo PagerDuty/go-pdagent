@@ -42,7 +42,7 @@ func NewServerCmd() *cobra.Command {
 
 	defaults := cmdutil.GetDefaults()
 
-	cmd.PersistentFlags().String("database", defaults.Database, "database file for event queuing (default is /var/db/pdagent/agent.db)")
+	cmd.PersistentFlags().String("database", defaults.Database, "database file for event queuing")
 	cmd.PersistentFlags().String("region", defaults.Region, `PagerDuty region the daemon sends events to, either "us" or "eu"`)
 
 	if err := viper.BindPFlag("database", cmd.PersistentFlags().Lookup("database")); err != nil {
