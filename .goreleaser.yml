@@ -49,10 +49,13 @@ nfpms:
     - /var/lib/pdagent
     - /var/log/pdagent
     - /var/run/pdagent
-  files:
-    "init/pdagent.init": "/var/lib/pdagent/scripts/pdagent.init"
-    "init/pdagent.service": "/var/lib/pdagent/scripts/pdagent.service"
-    "scripts/pd-*": "/usr/local/bin/"
+  contents:
+    - src: "init/pdagent.init"
+      dst: "/var/lib/pdagent/scripts/pdagent.init"
+    - src: "init/pdagent.service"
+      dst: "/var/lib/pdagent/scripts/pdagent.service"
+    - src: "scripts/pd-*"
+      dst: "/usr/local/bin/"
   overrides:
     deb:
       scripts:
