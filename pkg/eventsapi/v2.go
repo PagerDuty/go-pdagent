@@ -2,10 +2,13 @@ package eventsapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-const endpointV2 = "https://events.pagerduty.com/v2/enqueue"
+var endpointV2 = fmt.Sprintf("%v/v2/enqueue", common.PdEventsUrl())
 
 // EventV2 corresponds to a V2 event object.
 type EventV2 struct {

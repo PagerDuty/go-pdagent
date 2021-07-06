@@ -134,11 +134,11 @@ func buildDedupKey(cmdInputs nagiosEnqueueInput) string {
 }
 
 func validateNagiosSendCommand(cmdInputs nagiosEnqueueInput) error {
-	if err := validateEnumField(cmdInputs.notificationType, allowedNotificationTypes, errNotificationType); err != nil {
+	if err := cmdutil.ValidateEnumField(cmdInputs.notificationType, allowedNotificationTypes, errNotificationType); err != nil {
 		return err
 	}
 
-	if err := validateEnumField(cmdInputs.sourceType, allowedSourceTypes, errSourceType); err != nil {
+	if err := cmdutil.ValidateEnumField(cmdInputs.sourceType, allowedSourceTypes, errSourceType); err != nil {
 		return err
 	}
 
@@ -147,15 +147,6 @@ func validateNagiosSendCommand(cmdInputs nagiosEnqueueInput) error {
 	}
 
 	return nil
-}
-
-func validateEnumField(inputVal string, allowedValues []string, err error) error {
-	for _, value := range allowedValues {
-		if value == inputVal {
-			return nil
-		}
-	}
-	return err
 }
 
 func validateCustomDetails(cmdInputs nagiosEnqueueInput) error {

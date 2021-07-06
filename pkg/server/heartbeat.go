@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -11,11 +12,11 @@ import (
 	"go.uber.org/zap"
 )
 
-const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
 const maxRetries = 3
 const maxRetryInterval = 15 * time.Second
 
+var url = fmt.Sprintf("%v/agent/2014-03-14/heartbeat/go-pdagent", common.PdApiUrl())
 var ErrHeartbeatError = errors.New("an error was encountered while sending the heartbeat")
 
 type Heartbeat interface {

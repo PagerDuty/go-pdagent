@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -25,6 +26,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+var errInvalidRegion = errors.New(`region must be either "us" or "eu"`)
 
 func NewServerCmd() *cobra.Command {
 
@@ -40,7 +43,12 @@ func NewServerCmd() *cobra.Command {
 	defaults := cmdutil.GetDefaults()
 
 	cmd.PersistentFlags().String("database", defaults.Database, "database file for event queuing (default is /var/db/pdagent/agent.db)")
+	cmd.PersistentFlags().String("region", defaults.Region, `PagerDuty region the daemon sends events to, either "us" (default) or  "eu"`)
+
 	if err := viper.BindPFlag("database", cmd.PersistentFlags().Lookup("database")); err != nil {
+		fmt.Println(err)
+	}
+	if err := viper.BindPFlag("region", cmd.PersistentFlags().Lookup("region")); err != nil {
 		fmt.Println(err)
 	}
 
@@ -54,6 +62,12 @@ func runServerCommand() error {
 	database := viper.GetString("database")
 	pidfile := viper.GetString("pidfile")
 	secret := viper.GetString("secret")
+	region := viper.GetString("region")
+
+	allowedRegions := []string{"us", "eu"}
+	if err := cmdutil.ValidateEnumField(region, allowedRegions, errInvalidRegion); err != nil {
+		return err
+	}
 
 	queue := persistentqueue.NewPersistentQueue(persistentqueue.WithFile(database))
 
