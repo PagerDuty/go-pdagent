@@ -88,11 +88,16 @@ func (q *EventQueue) Shutdown() {
 // queued) as a return value and asynchronous errors (e.g. server error) that
 // are part of the channel Response.
 func (q *EventQueue) Enqueue(eventContainer *eventsapi.EventContainer, respChan chan<- Response) error {
-	if err := eventContainer.UnmarshalEvent().Validate(); err != nil {
+	event, err := eventContainer.UnmarshalEvent()
+	if err != nil {
 		return err
 	}
 
-	key := eventContainer.UnmarshalEvent().GetRoutingKey()
+	if err := event.Validate(); err != nil {
+		return err
+	}
+
+	key := event.GetRoutingKey()
 
 	q.ensureWorker(key)
 

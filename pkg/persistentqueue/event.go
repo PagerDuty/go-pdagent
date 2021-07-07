@@ -25,9 +25,14 @@ type Event struct {
 }
 
 func NewEvent(eventContainer *eventsapi.EventContainer) (*Event, error) {
+	event, err := eventContainer.UnmarshalEvent()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Event{
 		Key:        common.GenerateKey(),
-		RoutingKey: eventContainer.UnmarshalEvent().GetRoutingKey(),
+		RoutingKey: event.GetRoutingKey(),
 		Status:     StatusPending,
 		Event:      eventContainer,
 		CreatedAt:  time.Now(),
