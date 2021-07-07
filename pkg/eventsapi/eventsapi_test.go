@@ -21,15 +21,17 @@ func TestCommonEnqueueV2(t *testing.T) {
 
 	event := EventContainer{
 		EventVersion: EventVersion2,
-		EventData: map[string]interface{}{
-			"routing_key":  "11863b592c824bfc8989d9cba76abcde",
-			"event_action": "trigger",
-			"payload": map[string]interface{}{
-				"summary":  "PagerDuty Agent `CreateV1` Test",
-				"source":   "pdagent",
-				"severity": "error",
-			},
-		},
+		EventData: []byte(`
+			{
+				"routing_key":  "11863b592c824bfc8989d9cba76abcde",
+				"event_action": "trigger",
+				"payload": {
+					"summary":  "PagerDuty Agent CreateV1 Test",
+					"source":   "pdagent",
+					"severity": "error",
+				}
+			}
+		`),
 	}
 
 	vagueResp, err := Enqueue(context.Background(), &event)
@@ -67,11 +69,13 @@ func TestCommonEnqueueV1(t *testing.T) {
 
 	event := EventContainer{
 		EventVersion: EventVersion1,
-		EventData: map[string]interface{}{
-			"service_key": "11863b592c824bfc8989d9cba76abcde",
-			"event_type":  "trigger",
-			"description": "PagerDuty Agent `CreateV1` Test",
-		},
+		EventData: []byte(`
+			{
+				"service_key": "11863b592c824bfc8989d9cba76abcde",
+				"event_type":  "trigger",
+				"description": "PagerDuty Agent CreateV1 Test"
+			}
+		`),
 	}
 
 	vagueResp, err := Enqueue(context.Background(), &event)

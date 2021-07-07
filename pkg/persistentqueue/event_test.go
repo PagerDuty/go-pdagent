@@ -20,15 +20,17 @@ func TestEvent(t *testing.T) {
 
 	genericEvent := eventsapi.EventContainer{
 		EventVersion: eventsapi.EventVersion2,
-		EventData: map[string]interface{}{
-			"routing_key":  "11863b592c824bfc8989d9cba76abcde",
-			"event_action": "trigger",
-			"payload": map[string]interface{}{
-				"summary":  "PagerDuty Agent `CreateV1` Test",
-				"source":   "pdagent",
-				"severity": "error",
-			},
-		},
+		EventData: []byte(`
+			{
+				"routing_key":  "11863b592c824bfc8989d9cba76abcde",
+				"event_action": "trigger",
+				"payload": {
+					"summary":  "PagerDuty Agent CreateV1 Test",
+					"source":   "pdagent",
+					"severity": "error"
+				}
+			}
+		`),
 	}
 
 	event, err := NewEvent(&genericEvent)

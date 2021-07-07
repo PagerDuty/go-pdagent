@@ -92,7 +92,6 @@ func TestEventQueueMultiOrdering(t *testing.T) {
 
 	event1 := test.MockEventContainerV2(common.GenerateKey())
 	event2 := test.MockEventContainerV2(common.GenerateKey())
-	event2.EventData["routing_key"] = "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 	respChan1 := make(chan Response)
 	respChan2 := make(chan Response)
 	var receivedEvents []*eventsapi.EventContainer

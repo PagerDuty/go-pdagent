@@ -85,7 +85,7 @@ func Enqueue(context context.Context, eventContainer *EventContainer, options ..
 		option(&config)
 	}
 
-	event := eventContainer.GetEvent()
+	event := eventContainer.UnmarshalEvent()
 	switch e := event.(type) {
 	case *EventV1:
 		return CreateV1(context, config.HTTPClient, e)
