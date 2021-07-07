@@ -29,6 +29,10 @@ func (ge GenericEvent) GetRoutingKey() string {
 	}
 }
 
+func (ge GenericEvent) Version() EventVersion {
+	return ge.EventVersion
+}
+
 func (ge GenericEvent) getSpecificV1EventStruct() EventV1 {
 	jsonV1Event, _ := json.Marshal(ge.EventData)
 	var v1Event EventV1

@@ -29,6 +29,10 @@ func (e EventV2) Validate() error {
 	return nil
 }
 
+func (e EventV2) Version() EventVersion {
+	return EventVersion2
+}
+
 // PayloadV2 corresponds to a V2 payload object.
 type PayloadV2 struct {
 	Summary       string                 `json:"summary"`

@@ -21,6 +21,7 @@ var ErrUnrecognizedEventType = errors.New("unrecognized event type")
 type Event interface {
 	GetRoutingKey() string
 	Validate() error
+	Version() EventVersion
 }
 
 // Response defines a minimal interface for the events APIs' HTTP responses.

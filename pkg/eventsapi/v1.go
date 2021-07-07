@@ -31,6 +31,10 @@ func (e EventV1) Validate() error {
 	return nil
 }
 
+func (e EventV1) Version() EventVersion {
+	return EventVersion1
+}
+
 // DetailsV1 corresponds to a V1 details object.
 type DetailsV1 map[string]interface{}
 

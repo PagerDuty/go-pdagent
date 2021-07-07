@@ -38,7 +38,7 @@ func NewEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 				sendEvent.Payload.CustomDetails[k] = v
 			}
 
-			return cmdutil.RunSendCommand(config, sendEvent, eventsapi.EventVersion2)
+			return cmdutil.RunSendCommand(config, sendEvent)
 		},
 	}
 

@@ -22,10 +22,10 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
-func RunSendCommand(config *Config, sendEvent eventsapi.Event, eventVersion eventsapi.EventVersion) error {
+func RunSendCommand(config *Config, sendEvent eventsapi.Event) error {
 	c, _ := config.Client()
 
-	resp, err := c.Send(sendEvent, eventVersion)
+	resp, err := c.Send(sendEvent)
 	if err != nil {
 		return err
 	}

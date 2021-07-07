@@ -43,7 +43,7 @@ func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 				sendEvent.Details[k] = v
 			}
 
-			return cmdutil.RunSendCommand(config, sendEvent, eventsapi.EventVersion1)
+			return cmdutil.RunSendCommand(config, sendEvent)
 		},
 	}
 
