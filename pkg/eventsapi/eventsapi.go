@@ -79,21 +79,14 @@ func WithHTTPClient(client *http.Client) EnqueueOption {
 }
 
 // Enqueue an event to either the V1 or V2 events API depending on event type.
-func Enqueue(context context.Context, event Event, options ...EnqueueOption) (Response, error) {
+func Enqueue(context context.Context, eventContainer *EventContainer, options ...EnqueueOption) (Response, error) {
 	config := defaultEnqueueConfig
 	for _, option := range options {
 		option(&config)
 	}
 
+	event := eventContainer.GetEvent()
 	switch e := event.(type) {
-	case *GenericEvent:
-		if e.EventVersion == EventVersion1 {
-			specificEvent := e.getSpecificV1EventStruct()
-			return CreateV1(context, config.HTTPClient, &specificEvent)
-		} else {
-			specificEvent := e.getSpecificV2EventStruct()
-			return EnqueueV2(context, config.HTTPClient, &specificEvent)
-		}
 	case *EventV1:
 		return CreateV1(context, config.HTTPClient, e)
 	case *EventV2:

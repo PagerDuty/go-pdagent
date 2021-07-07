@@ -18,20 +18,18 @@ type Event struct {
 	Key          string `storm:"index"`
 	RoutingKey   string `storm:"index"`
 	Status       string `storm:"index"`
-	Event        *eventsapi.GenericEvent
+	Event        *eventsapi.EventContainer
 	ResponseBody []byte
 	CreatedAt    time.Time `storm:"index"`
 	UpdatedAt    time.Time `storm:"index"`
 }
 
-func NewEvent(event eventsapi.Event) (*Event, error) {
-	genericEvent, _ := event.(*eventsapi.GenericEvent)
-
+func NewEvent(eventContainer *eventsapi.EventContainer) (*Event, error) {
 	return &Event{
 		Key:        common.GenerateKey(),
-		RoutingKey: event.GetRoutingKey(),
+		RoutingKey: eventContainer.GetEvent().GetRoutingKey(),
 		Status:     StatusPending,
-		Event:      genericEvent,
+		Event:      eventContainer,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}, nil

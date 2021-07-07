@@ -20,7 +20,7 @@ func TestPersistentQueueSimple(t *testing.T) {
 		t.Fatal("Error starting persistent queue.")
 	}
 
-	genericEvent := eventsapi.GenericEvent{
+	eventContainer := eventsapi.EventContainer{
 		EventVersion: eventsapi.EventVersion2,
 		EventData: map[string]interface{}{
 			"routing_key":  "11863b592c824bfc8989d9cba76abcde",
@@ -33,7 +33,7 @@ func TestPersistentQueueSimple(t *testing.T) {
 		},
 	}
 
-	key, err := q.Enqueue(&genericEvent)
+	key, err := q.Enqueue(&eventContainer)
 	if err != nil {
 		t.Fatal(err)
 	}

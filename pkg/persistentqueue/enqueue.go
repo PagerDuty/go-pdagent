@@ -12,17 +12,17 @@ import (
 // Only synchronous errors (e.g. invalid event) are supported as there are
 // cases where we might not have a per-event response channel (e.g. processing
 // a backlog).
-func (q *PersistentQueue) Enqueue(event eventsapi.Event) (string, error) {
-	if err := event.Validate(); err != nil {
-		q.logger.Errorf("Failed to validate event in queue %v.", event.GetRoutingKey(), err)
+func (q *PersistentQueue) Enqueue(eventContainer *eventsapi.EventContainer) (string, error) {
+	if err := eventContainer.GetEvent().Validate(); err != nil {
+		q.logger.Errorf("Failed to validate event in queue %v.", eventContainer.GetEvent().GetRoutingKey(), err)
 		return "", err
 	}
 
-	e, err := NewEvent(event)
+	e, err := NewEvent(eventContainer)
 	if err != nil {
 		return "", err
 	}
-	q.logger.Infof("Enqueuing to %v with key %v.", event.GetRoutingKey(), e.Key)
+	q.logger.Infof("Enqueuing to %v with key %v.", eventContainer.GetEvent().GetRoutingKey(), e.Key)
 
 	if err := e.Create(q.Events); err != nil {
 		q.logger.Errorf("Failed to create event %v: %v.", e.Key, err)

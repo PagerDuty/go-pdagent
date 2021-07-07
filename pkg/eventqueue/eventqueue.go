@@ -87,17 +87,17 @@ func (q *EventQueue) Shutdown() {
 // come in two flavors: Synchronous errors (e.g. event is invalid and never
 // queued) as a return value and asynchronous errors (e.g. server error) that
 // are part of the channel Response.
-func (q *EventQueue) Enqueue(event eventsapi.Event, respChan chan<- Response) error {
-	if err := event.Validate(); err != nil {
+func (q *EventQueue) Enqueue(eventContainer *eventsapi.EventContainer, respChan chan<- Response) error {
+	if err := eventContainer.GetEvent().Validate(); err != nil {
 		return err
 	}
 
-	key := event.GetRoutingKey()
+	key := eventContainer.GetEvent().GetRoutingKey()
 
 	q.ensureWorker(key)
 
 	select {
-	case q.queues[key] <- Job{event, respChan, q.logger.Named(key)}:
+	case q.queues[key] <- Job{eventContainer, respChan, q.logger.Named(key)}:
 		return nil
 	default:
 		respChan <- Response{Error: &ErrBufferOverflow{key, DefaultBufferSize}}
@@ -132,9 +132,9 @@ func (q *EventQueue) worker(key string, c <-chan Job) {
 }
 
 type Job struct {
-	Event        eventsapi.Event
-	ResponseChan chan<- Response
-	Logger       *zap.SugaredLogger
+	EventContainer *eventsapi.EventContainer
+	ResponseChan   chan<- Response
+	Logger         *zap.SugaredLogger
 }
 
 type Response struct {

@@ -6,16 +6,17 @@ import (
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/PagerDuty/go-pdagent/test"
 )
 
 func TestEventQueueSimple(t *testing.T) {
 	eq := NewEventQueue()
 	defer eq.Shutdown()
 	respChan := make(chan Response)
-	event := mockEventV2(common.GenerateKey())
+	event := test.MockEventContainerV2(common.GenerateKey())
 
 	processor := func(job Job, _ chan bool) {
-		if job.Event != &event {
+		if job.EventContainer != &event {
 			t.Error("Expected enqueued event to match job event.")
 		}
 
@@ -51,18 +52,18 @@ func TestEventQueueSingleOrdering(t *testing.T) {
 	defer eq.Shutdown()
 
 	key := common.GenerateKey()
-	event1 := mockEventV2(key)
-	event2 := mockEventV2(key)
+	event1 := test.MockEventContainerV2(key)
+	event2 := test.MockEventContainerV2(key)
 	respChan1 := make(chan Response)
 	respChan2 := make(chan Response)
-	var receivedEvents []eventsapi.Event
+	var receivedEvents []*eventsapi.EventContainer
 
 	processor := func(job Job, _ chan bool) {
-		if job.Event == &event1 {
+		if job.EventContainer == &event1 {
 			time.Sleep(time.Second)
 		}
 
-		receivedEvents = append(receivedEvents, job.Event)
+		receivedEvents = append(receivedEvents, job.EventContainer)
 		job.ResponseChan <- Response{}
 	}
 	eq.Processor = processor
@@ -89,19 +90,19 @@ func TestEventQueueMultiOrdering(t *testing.T) {
 	eq := NewEventQueue()
 	defer eq.Shutdown()
 
-	event1 := mockEventV2(common.GenerateKey())
-	event2 := mockEventV2(common.GenerateKey())
-	event2.RoutingKey = "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+	event1 := test.MockEventContainerV2(common.GenerateKey())
+	event2 := test.MockEventContainerV2(common.GenerateKey())
+	event2.EventData["routing_key"] = "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 	respChan1 := make(chan Response)
 	respChan2 := make(chan Response)
-	var receivedEvents []eventsapi.Event
+	var receivedEvents []*eventsapi.EventContainer
 
 	processor := func(job Job, _ chan bool) {
-		if job.Event == &event1 {
+		if job.EventContainer == &event1 {
 			time.Sleep(time.Second)
 		}
 
-		receivedEvents = append(receivedEvents, job.Event)
+		receivedEvents = append(receivedEvents, job.EventContainer)
 		job.ResponseChan <- Response{}
 	}
 	eq.Processor = processor

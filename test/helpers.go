@@ -17,10 +17,12 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/viper"
 )
 
@@ -50,4 +52,25 @@ func InitConfigForIntegrationsTesting() {
 
 	// Load normal config from environment variables and config files
 	cmdutil.InitConfig()
+}
+
+func MockEventContainerV2(key string) eventsapi.EventContainer {
+	eventContainer := eventsapi.EventContainer{
+		EventVersion: eventsapi.EventVersion2,
+	}
+
+	eventV2 := eventsapi.EventV2{
+		RoutingKey:  key,
+		EventAction: "trigger",
+		Payload: eventsapi.PayloadV2{
+			Summary:  "Test summary",
+			Source:   "Test source",
+			Severity: "Error",
+		},
+	}
+
+	jsonEvent, _ := json.Marshal(eventV2)
+	_ = json.Unmarshal(jsonEvent, &eventContainer.EventData)
+
+	return eventContainer
 }

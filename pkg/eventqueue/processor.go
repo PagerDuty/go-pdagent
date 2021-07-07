@@ -20,7 +20,7 @@ type Processor func(Job, chan bool)
 // It accepts a Job containing an Event
 func EventProcessor(job Job, stop chan bool) {
 	ctx := context.Background()
-	resp, err := eventsapi.Enqueue(ctx, job.Event)
+	resp, err := eventsapi.Enqueue(ctx, job.EventContainer)
 
 	job.ResponseChan <- Response{resp, err}
 }

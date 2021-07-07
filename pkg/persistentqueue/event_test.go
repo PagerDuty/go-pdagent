@@ -18,7 +18,7 @@ func TestEvent(t *testing.T) {
 
 	eventsDb := db.From("events")
 
-	genericEvent := eventsapi.GenericEvent{
+	genericEvent := eventsapi.EventContainer{
 		EventVersion: eventsapi.EventVersion2,
 		EventData: map[string]interface{}{
 			"routing_key":  "11863b592c824bfc8989d9cba76abcde",

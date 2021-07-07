@@ -30,7 +30,7 @@ func (q *MockEventQueue) Shutdown() {
 	q.logger.Debug("Shutdown called.")
 }
 
-func (q *MockEventQueue) Enqueue(_ eventsapi.Event, c chan<- eventqueue.Response) error {
+func (q *MockEventQueue) Enqueue(_ *eventsapi.EventContainer, c chan<- eventqueue.Response) error {
 	q.logger.Debug("Enqueue called.")
 	go func() {
 		q.logger.Debug("Response sent called.")

@@ -17,16 +17,16 @@ func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {
 
 	s.logger.Debugf("/send payload: %v", string(body))
 
-	event := eventsapi.GenericEvent{
+	eventContainer := eventsapi.EventContainer{
 		EventVersion: eventsapi.StringToEventVersion[req.Header["Pd-Event-Version"][0]],
 	}
 
-	if err = json.Unmarshal(body, &event.EventData); err != nil {
+	if err = json.Unmarshal(body, &eventContainer.EventData); err != nil {
 		errorResp(rw, 400, []string{err.Error()})
 		return
 	}
 
-	key, err := s.Queue.Enqueue(&event)
+	key, err := s.Queue.Enqueue(&eventContainer)
 	if err != nil {
 		errorResp(rw, 500, []string{err.Error()})
 		return
