@@ -112,7 +112,7 @@ A small helper library used for sending events to both Events API V1 and V2 endp
 
 This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
 
-- [ ] Events API V1 support.
+- [x] Events API V1 support.
 - [X] Events API V2 support.
     - [X] Parity with existing `pd-send` functionality.
     - [X] Comprehensive Events API V2 payload support (no links / images yet).
