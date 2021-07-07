@@ -1,14 +1,12 @@
 package eventsapi
 
-type EventVersion int
+type EventVersion string
 
-const (
-	EventVersion1 EventVersion = iota
-	EventVersion2
-)
+var EventVersion1 EventVersion = "v1"
+var EventVersion2 EventVersion = "v2"
 
 func (ev EventVersion) String() string {
-	return []string{"v1", "v2"}[ev]
+	return string(ev)
 }
 
 var StringToEventVersion = map[string]EventVersion{
