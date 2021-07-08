@@ -17,11 +17,11 @@ type EventV2 struct {
 	Links       []LinkV2  `json:"links,omitempty"`
 }
 
-func (e EventV2) GetRoutingKey() string {
+func (e *EventV2) GetRoutingKey() string {
 	return e.RoutingKey
 }
 
-func (e EventV2) Validate() error {
+func (e *EventV2) Validate() error {
 	if err := validateRoutingKey(e.RoutingKey); err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (e EventV2) Validate() error {
 	return nil
 }
 
-func (e EventV2) Version() EventVersion {
+func (e *EventV2) Version() EventVersion {
 	return EventVersion2
 }
 

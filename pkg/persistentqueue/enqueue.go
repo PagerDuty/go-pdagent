@@ -15,6 +15,7 @@ import (
 func (q *PersistentQueue) Enqueue(eventContainer *eventsapi.EventContainer) (string, error) {
 	event, err := eventContainer.UnmarshalEvent()
 	if err != nil {
+		q.logger.Errorf("Failed to unmarshal event container in queue", err)
 		return "", err
 	}
 
