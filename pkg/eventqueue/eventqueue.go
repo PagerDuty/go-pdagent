@@ -36,9 +36,16 @@ const DefaultBufferSize = 1000
 //		   },
 //     }
 //
+//     rawEvent, _ := json.Marshal(event)
+//
+//     eventContainer := eventsapi.EventContainer{
+//	     EventVersion: event.Version(),
+//       EventData:    rawEvent,
+//     }
+//
 //     respChan = make(chan eventqueue.Response)
 //
-//     queue.Enqueue(event, respChan)
+//     queue.Enqueue(&eventContainer, respChan)
 //
 //     resp := <-respChan
 //
