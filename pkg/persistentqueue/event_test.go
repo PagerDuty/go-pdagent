@@ -18,7 +18,7 @@ func TestEvent(t *testing.T) {
 
 	eventsDb := db.From("events")
 
-	genericEvent := eventsapi.EventContainer{
+	eventContainer := eventsapi.EventContainer{
 		EventVersion: eventsapi.EventVersion2,
 		EventData: []byte(`
 			{
@@ -33,7 +33,7 @@ func TestEvent(t *testing.T) {
 		`),
 	}
 
-	event, err := NewEvent(&genericEvent)
+	event, err := NewEvent(&eventContainer)
 	if err != nil {
 		t.Fatal(err)
 	}
