@@ -15,13 +15,16 @@ func (ec *EventContainer) UnmarshalEvent() (Event, error) {
 		return nil, err
 	}
 
-	if ec.EventVersion == EventVersion1 {
+	switch ec.EventVersion {
+	case EventVersion1:
 		var v1Event EventV1
 		err = json.Unmarshal(jsonEventData, &v1Event)
 		return &v1Event, err
-	} else {
+	case EventVersion2:
 		var v2Event EventV2
 		_ = json.Unmarshal(jsonEventData, &v2Event)
 		return &v2Event, err
+	default:
+		return nil, ErrUnrecognizedEventType
 	}
 }
