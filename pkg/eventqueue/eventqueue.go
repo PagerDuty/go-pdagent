@@ -39,7 +39,7 @@ const DefaultBufferSize = 1000
 //     rawEvent, _ := json.Marshal(event)
 //
 //     eventContainer := eventsapi.EventContainer{
-//	     EventVersion: event.Version(),
+//       EventVersion: event.Version(),
 //       EventData:    rawEvent,
 //     }
 //
