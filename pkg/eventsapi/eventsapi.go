@@ -22,6 +22,7 @@ type Event interface {
 	GetRoutingKey() string
 	Validate() error
 	Version() EventVersion
+	AddCustomDetail(key string, val interface{})
 }
 
 // Response defines a minimal interface for the events APIs' HTTP responses.

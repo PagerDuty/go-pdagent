@@ -37,13 +37,7 @@ func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 		Required flags: "routing-key", "event-type"`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Manually mapping as a workaround for the map type mismatch.
-			sendEvent.Details = map[string]interface{}{}
-			for k, v := range customDetails {
-				sendEvent.Details[k] = v
-			}
-
-			return cmdutil.RunSendCommand(config, sendEvent)
+			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
 		},
 	}
 
