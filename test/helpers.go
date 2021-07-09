@@ -54,7 +54,7 @@ func InitConfigForIntegrationsTesting() {
 	cmdutil.InitConfig()
 }
 
-func MockEventContainerV2(key string) eventsapi.EventContainer {
+func BuildV2EventContainer(key string) eventsapi.EventContainer {
 	eventContainer := eventsapi.EventContainer{
 		EventVersion: eventsapi.EventVersion2,
 	}

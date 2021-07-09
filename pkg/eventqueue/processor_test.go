@@ -25,7 +25,7 @@ func TestEventsV2ProcessorSimple(t *testing.T) {
 
 	respChan := make(chan Response)
 	stopChan := make(chan bool)
-	event := test.MockEventContainerV2(common.GenerateKey())
+	event := test.BuildV2EventContainer(common.GenerateKey())
 
 	job := Job{
 		EventContainer: &event,
@@ -73,7 +73,7 @@ func TestEventsV2ProcessorError(t *testing.T) {
 
 	respChan := make(chan Response)
 	stopChan := make(chan bool)
-	event := test.MockEventContainerV2(common.GenerateKey())
+	event := test.BuildV2EventContainer(common.GenerateKey())
 
 	job := Job{
 		EventContainer: &event,

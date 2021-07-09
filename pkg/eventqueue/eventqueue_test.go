@@ -13,7 +13,7 @@ func TestEventQueueSimple(t *testing.T) {
 	eq := NewEventQueue()
 	defer eq.Shutdown()
 	respChan := make(chan Response)
-	event := test.MockEventContainerV2(common.GenerateKey())
+	event := test.BuildV2EventContainer(common.GenerateKey())
 
 	processor := func(job Job, _ chan bool) {
 		if job.EventContainer != &event {
@@ -52,8 +52,8 @@ func TestEventQueueSingleOrdering(t *testing.T) {
 	defer eq.Shutdown()
 
 	key := common.GenerateKey()
-	event1 := test.MockEventContainerV2(key)
-	event2 := test.MockEventContainerV2(key)
+	event1 := test.BuildV2EventContainer(key)
+	event2 := test.BuildV2EventContainer(key)
 	respChan1 := make(chan Response)
 	respChan2 := make(chan Response)
 	var receivedEvents []*eventsapi.EventContainer
@@ -90,8 +90,8 @@ func TestEventQueueMultiOrdering(t *testing.T) {
 	eq := NewEventQueue()
 	defer eq.Shutdown()
 
-	event1 := test.MockEventContainerV2(common.GenerateKey())
-	event2 := test.MockEventContainerV2(common.GenerateKey())
+	event1 := test.BuildV2EventContainer(common.GenerateKey())
+	event2 := test.BuildV2EventContainer(common.GenerateKey())
 	respChan1 := make(chan Response)
 	respChan2 := make(chan Response)
 	var receivedEvents []*eventsapi.EventContainer
