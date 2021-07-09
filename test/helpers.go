@@ -55,10 +55,6 @@ func InitConfigForIntegrationsTesting() {
 }
 
 func BuildV2EventContainer(key string) eventsapi.EventContainer {
-	eventContainer := eventsapi.EventContainer{
-		EventVersion: eventsapi.EventVersion2,
-	}
-
 	eventV2 := eventsapi.EventV2{
 		RoutingKey:  key,
 		EventAction: "trigger",
@@ -70,7 +66,9 @@ func BuildV2EventContainer(key string) eventsapi.EventContainer {
 	}
 
 	jsonEvent, _ := json.Marshal(eventV2)
-	_ = json.Unmarshal(jsonEvent, &eventContainer.EventData)
 
-	return eventContainer
+	return eventsapi.EventContainer{
+		EventVersion: eventsapi.EventVersion2,
+		EventData:    jsonEvent,
+	}
 }
