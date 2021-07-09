@@ -28,7 +28,7 @@ func TestCommonEnqueueV2(t *testing.T) {
 				"payload": {
 					"summary":  "PagerDuty Agent CreateV1 Test",
 					"source":   "pdagent",
-					"severity": "error",
+					"severity": "error"
 				}
 			}
 		`),
