@@ -12,13 +12,13 @@ type EventContainer struct {
 func (ec *EventContainer) UnmarshalEvent() (Event, error) {
 	switch ec.EventVersion {
 	case EventVersion1:
-		var v1Event EventV1
-		err := json.Unmarshal(ec.EventData, &v1Event)
-		return &v1Event, err
+		var event EventV1
+		err := json.Unmarshal(ec.EventData, &event)
+		return &event, err
 	case EventVersion2:
-		var v2Event EventV2
-		err := json.Unmarshal(ec.EventData, &v2Event)
-		return &v2Event, err
+		var event EventV2
+		err := json.Unmarshal(ec.EventData, &event)
+		return &event, err
 	default:
 		return nil, ErrUnrecognizedEventType
 	}
