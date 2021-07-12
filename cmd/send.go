@@ -34,7 +34,7 @@ func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 		Long: `Queue up a trigger, acknowledge, or resolve V1 event to PagerDuty
 		using a backwards-compatible set of flags.
 
-		Required flags: "routing-key", "event-type"`,
+		Required flags: "service-key", "event-type"`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
@@ -49,7 +49,7 @@ func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&sendEvent.ClientURL, "client-url", "u", "", "Client URL")
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
-	cmd.MarkFlagRequired("routing-key")
+	cmd.MarkFlagRequired("service-key")
 	cmd.MarkFlagRequired("event-type")
 
 	return cmd
