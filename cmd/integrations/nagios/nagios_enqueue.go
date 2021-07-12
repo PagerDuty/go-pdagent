@@ -25,14 +25,12 @@ import (
 )
 
 type nagiosEnqueueInput struct {
-	routingKey       string
+	serviceKey       string
 	notificationType string
 	sourceType       string
-	dedupKey         string
+	incidentKey      string
 	customFields     map[string]string
 }
-
-const defaultNagiosIntegrationSeverity = "error"
 
 var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
 var allowedSourceTypes = []string{"host", "service"}
@@ -54,7 +52,7 @@ var nagiosToPagerDutyEventType = map[string]string{
 func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	var cmdInput nagiosEnqueueInput
 
-	requiredFlags := []string{"routing-key", "notification-type", "source-type"}
+	requiredFlags := []string{"service-key", "notification-type", "source-type"}
 
 	cmd := &cobra.Command{
 		Use:   "enqueue",
@@ -81,10 +79,10 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cmdInput.routingKey, "routing-key", "k", "", "Service Events API Key (required)")
+	cmd.Flags().StringVarP(&cmdInput.serviceKey, "service-key", "k", "", "Service Events API Key (required)")
 	cmd.Flags().StringVarP(&cmdInput.notificationType, "notification-type", "t", "", "The Nagios notification type (required)")
 	cmd.Flags().StringVarP(&cmdInput.sourceType, "source-type", "n", "", "The Nagios source type (host or service, required)")
-	cmd.Flags().StringVarP(&cmdInput.dedupKey, "dedup-key", "y", "", "Deduplication key for correlating triggers and resolves")
+	cmd.Flags().StringVarP(&cmdInput.incidentKey, "incident-key", "y", "", "Incident key for correlating triggers and resolves")
 	cmd.Flags().StringToStringVarP(&cmdInput.customFields, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
 
 	for _, flag := range requiredFlags {
@@ -94,19 +92,15 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV2, map[string]string) {
-	sendEvent := eventsapi.EventV2{
-		RoutingKey:  cmdInputs.routingKey,
-		EventAction: nagiosToPagerDutyEventType[cmdInputs.notificationType],
-		DedupKey:    cmdInputs.dedupKey,
-		Payload: eventsapi.PayloadV2{
-			Summary:  buildEventDescription(cmdInputs),
-			Source:   cmdInputs.customFields["HOSTNAME"],
-			Severity: defaultNagiosIntegrationSeverity,
-		},
+func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV1, map[string]string) {
+	sendEvent := eventsapi.EventV1{
+		ServiceKey:  cmdInputs.serviceKey,
+		EventType:   nagiosToPagerDutyEventType[cmdInputs.notificationType],
+		IncidentKey: cmdInputs.incidentKey,
+		Description: buildEventDescription(cmdInputs),
 	}
-	if sendEvent.DedupKey == "" {
-		sendEvent.DedupKey = buildDedupKey(cmdInputs)
+	if sendEvent.IncidentKey == "" {
+		sendEvent.IncidentKey = buildIncidentKey(cmdInputs)
 	}
 
 	customDetails := cmdInputs.customFields
@@ -123,7 +117,7 @@ func buildEventDescription(cmdInputs nagiosEnqueueInput) string {
 	return strings.Join(descriptionFields, "; ")
 }
 
-func buildDedupKey(cmdInputs nagiosEnqueueInput) string {
+func buildIncidentKey(cmdInputs nagiosEnqueueInput) string {
 	if cmdInputs.sourceType == "host" {
 		return fmt.Sprintf("event_source=host;host_name=%v", cmdInputs.customFields["HOSTNAME"])
 	}
