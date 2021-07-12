@@ -80,7 +80,7 @@ type ResponseV2 struct {
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event *EventV2) (*ResponseV2, error) {
 	var response ResponseV2
-	requestUrl := common.PdEventsUrl() + endpointV2
-	err := enqueueEvent(context, client, requestUrl, event, &response)
+	url := common.PdEventsUrl() + endpointV2
+	err := enqueueEvent(context, client, url, event, &response)
 	return &response, err
 }

@@ -75,7 +75,7 @@ type ResponseV1 struct {
 // service's own.
 func CreateV1(context context.Context, client *http.Client, event *EventV1) (*ResponseV1, error) {
 	var response ResponseV1
-	requestUrl := common.PdEventsUrl() + endpointV1
-	err := enqueueEvent(context, client, requestUrl, event, &response)
+	url := common.PdEventsUrl() + endpointV1
+	err := enqueueEvent(context, client, url, event, &response)
 	return &response, err
 }

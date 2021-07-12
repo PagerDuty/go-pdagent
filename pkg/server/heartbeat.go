@@ -93,8 +93,8 @@ func (hb *heartbeat) beat() {
 }
 
 func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
-	heartbeatUrl := common.PdApiUrl() + endpoint
-	req, err := http.NewRequest("GET", heartbeatUrl, nil)
+	url := common.PdApiUrl() + endpoint
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
