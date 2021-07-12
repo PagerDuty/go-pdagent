@@ -30,6 +30,7 @@ type Defaults struct {
 	Database   string
 	Pidfile    string
 	Secret     string
+	Region     string
 }
 
 func GetDefaults() Defaults {
@@ -42,6 +43,7 @@ func GetDefaults() Defaults {
 			Database:   "/var/db/pdagent/pdagent.db",
 			Pidfile:    "/var/run/pdagent/pidfile",
 			Secret:     common.GenerateKey(),
+			Region:     "us",
 		}
 	}
 
@@ -53,6 +55,7 @@ func GetDefaults() Defaults {
 		Database:   path.Join(configPath, "pdagent.db"),
 		Pidfile:    path.Join(configPath, "pidfile"),
 		Secret:     common.GenerateKey(),
+		Region:     "us",
 	}
 }
 
