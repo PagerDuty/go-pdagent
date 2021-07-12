@@ -11,10 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const endpoint = "/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
 const maxRetries = 3
 const maxRetryInterval = 15 * time.Second
-const heartbeatEndpoint = "/agent/2014-03-14/heartbeat/go-pdagent"
 
 var ErrHeartbeatError = errors.New("an error was encountered while sending the heartbeat")
 
@@ -93,7 +93,7 @@ func (hb *heartbeat) beat() {
 }
 
 func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
-	heartbeatUrl := common.PdApiUrl() + heartbeatEndpoint
+	heartbeatUrl := common.PdApiUrl() + endpoint
 	req, err := http.NewRequest("GET", heartbeatUrl, nil)
 	if err != nil {
 		return nil, err

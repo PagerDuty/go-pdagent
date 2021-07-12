@@ -7,7 +7,7 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-var endpointV2 = "/v2/enqueue"
+const endpointV2 = "/v2/enqueue"
 
 // EventV2 corresponds to a V2 event object.
 type EventV2 struct {
