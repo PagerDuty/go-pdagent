@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -15,8 +14,8 @@ import (
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
 const maxRetries = 3
 const maxRetryInterval = 15 * time.Second
+const heartbeatEndpoint = "/agent/2014-03-14/heartbeat/go-pdagent"
 
-var url = fmt.Sprintf("%v/agent/2014-03-14/heartbeat/go-pdagent", common.PdApiUrl())
 var ErrHeartbeatError = errors.New("an error was encountered while sending the heartbeat")
 
 type Heartbeat interface {
@@ -94,7 +93,8 @@ func (hb *heartbeat) beat() {
 }
 
 func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	heartbeatUrl := common.PdApiUrl() + heartbeatEndpoint
+	req, err := http.NewRequest("GET", heartbeatUrl, nil)
 	if err != nil {
 		return nil, err
 	}
