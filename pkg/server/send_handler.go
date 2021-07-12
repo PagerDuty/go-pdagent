@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -17,13 +16,12 @@ func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {
 
 	s.logger.Debugf("/send payload: %v", string(body))
 
-	var event eventsapi.EventV2
-	if err = json.Unmarshal(body, &event); err != nil {
-		errorResp(rw, 400, []string{err.Error()})
-		return
+	eventContainer := eventsapi.EventContainer{
+		EventVersion: eventsapi.StringToEventVersion[req.Header["Pd-Event-Version"][0]],
+		EventData:    body,
 	}
 
-	key, err := s.Queue.Enqueue(&event)
+	key, err := s.Queue.Enqueue(&eventContainer)
 	if err != nil {
 		errorResp(rw, 500, []string{err.Error()})
 		return

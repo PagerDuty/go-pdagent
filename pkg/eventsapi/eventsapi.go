@@ -21,6 +21,8 @@ var ErrUnrecognizedEventType = errors.New("unrecognized event type")
 type Event interface {
 	GetRoutingKey() string
 	Validate() error
+	Version() EventVersion
+	AddCustomDetail(key string, val interface{})
 }
 
 // Response defines a minimal interface for the events APIs' HTTP responses.
@@ -78,10 +80,15 @@ func WithHTTPClient(client *http.Client) EnqueueOption {
 }
 
 // Enqueue an event to either the V1 or V2 events API depending on event type.
-func Enqueue(context context.Context, event Event, options ...EnqueueOption) (Response, error) {
+func Enqueue(context context.Context, eventContainer *EventContainer, options ...EnqueueOption) (Response, error) {
 	config := defaultEnqueueConfig
 	for _, option := range options {
 		option(&config)
+	}
+
+	event, err := eventContainer.UnmarshalEvent()
+	if err != nil {
+		return nil, err
 	}
 
 	switch e := event.(type) {

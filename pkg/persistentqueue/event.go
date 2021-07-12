@@ -1,7 +1,6 @@
 package persistentqueue
 
 import (
-	"errors"
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
@@ -13,31 +12,29 @@ const StatusPending = "pending"
 const StatusError = "error"
 const StatusSuccess = "success"
 
-var ErrV2Only = errors.New("expected a pointer to an Events API V2 event")
-
 // Event represents an queued or processed event.
 type Event struct {
 	ID           int    `storm:"id,increment"`
 	Key          string `storm:"index"`
 	RoutingKey   string `storm:"index"`
 	Status       string `storm:"index"`
-	Event        *eventsapi.EventV2
+	Event        *eventsapi.EventContainer
 	ResponseBody []byte
 	CreatedAt    time.Time `storm:"index"`
 	UpdatedAt    time.Time `storm:"index"`
 }
 
-func NewEvent(event eventsapi.Event) (*Event, error) {
-	ev2, ok := event.(*eventsapi.EventV2)
-	if !ok {
-		return nil, ErrV2Only
+func NewEvent(eventContainer *eventsapi.EventContainer) (*Event, error) {
+	event, err := eventContainer.UnmarshalEvent()
+	if err != nil {
+		return nil, err
 	}
 
 	return &Event{
 		Key:        common.GenerateKey(),
 		RoutingKey: event.GetRoutingKey(),
 		Status:     StatusPending,
-		Event:      ev2,
+		Event:      eventContainer,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}, nil

@@ -19,16 +19,27 @@ type EventV1 struct {
 	Contexts    []ContextV1 `json:"contexts,omitempty"`
 }
 
-func (e EventV1) GetRoutingKey() string {
+func (e *EventV1) GetRoutingKey() string {
 	return e.ServiceKey
 }
 
-func (e EventV1) Validate() error {
+func (e *EventV1) Validate() error {
 	if err := validateRoutingKey(e.ServiceKey); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (e *EventV1) Version() EventVersion {
+	return EventVersion1
+}
+
+func (e *EventV1) AddCustomDetail(k string, v interface{}) {
+	if e.Details == nil {
+		e.Details = map[string]interface{}{}
+	}
+	e.Details[k] = v
 }
 
 // DetailsV1 corresponds to a V1 details object.

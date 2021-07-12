@@ -24,28 +24,33 @@ import (
 func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 	var customDetails map[string]string
 
-	var sendEvent = eventsapi.EventV2{
-		Payload: eventsapi.PayloadV2{},
+	var sendEvent = eventsapi.EventV1{
+		Details: eventsapi.DetailsV1{},
 	}
 
 	cmd := &cobra.Command{
 		Use:   "send",
-		Short: "Queue up a trigger, acknowledge, or resolve event to PagerDuty",
-		Long: `Queue up a trigger, acknowledge, or resolve V2 event to PagerDuty
-		using a backwards-compatible set of flags.`,
+		Short: "Queue up a trigger, acknowledge, or resolve a V1 event to PagerDuty",
+		Long: `Queue up a trigger, acknowledge, or resolve V1 event to PagerDuty
+		using a backwards-compatible set of flags.
+
+		Required flags: "service-key", "event-type"`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
+			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
 		},
 	}
 
-	cmd.Flags().StringVarP(&sendEvent.RoutingKey, "routing-key", "k", "", "Service Events API Key")
-	cmd.Flags().StringVarP(&sendEvent.EventAction, "event-type", "t", "", "Event type")
-	cmd.Flags().StringVarP(&sendEvent.Payload.Summary, "description", "d", "", "Short description of the problem")
-	cmd.Flags().StringVarP(&sendEvent.DedupKey, "incident-key", "i", "", "Incident Key")
-	cmd.Flags().StringVarP(&sendEvent.Payload.Component, "client", "c", "", "Client")
-	cmd.Flags().StringVarP(&sendEvent.Payload.Source, "client-url", "u", "", "Client URL")
+	cmd.Flags().StringVarP(&sendEvent.ServiceKey, "service-key", "k", "", "Service Events API Key")
+	cmd.Flags().StringVarP(&sendEvent.EventType, "event-type", "t", "", `Event type, either "trigger", "acknowledge", or "resolve"`)
+	cmd.Flags().StringVarP(&sendEvent.Description, "description", "d", "", "Short description of the problem")
+	cmd.Flags().StringVarP(&sendEvent.IncidentKey, "incident-key", "i", "", "Incident Key")
+	cmd.Flags().StringVarP(&sendEvent.Client, "client", "c", "", "Client")
+	cmd.Flags().StringVarP(&sendEvent.ClientURL, "client-url", "u", "", "Client URL")
 	cmd.Flags().StringToStringVarP(&customDetails, "field", "f", map[string]string{}, "Add given KEY=VALUE pair to the event details")
+
+	cmd.MarkFlagRequired("service-key")
+	cmd.MarkFlagRequired("event-type")
 
 	return cmd
 }

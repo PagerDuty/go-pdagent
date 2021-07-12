@@ -6,6 +6,7 @@ import (
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/PagerDuty/go-pdagent/test"
 	"gopkg.in/h2non/gock.v1"
 )
 
@@ -24,12 +25,12 @@ func TestEventsV2ProcessorSimple(t *testing.T) {
 
 	respChan := make(chan Response)
 	stopChan := make(chan bool)
-	event := mockEventV2(common.GenerateKey())
+	event := test.BuildV2EventContainer(common.GenerateKey())
 
 	job := Job{
-		Event:        &event,
-		ResponseChan: respChan,
-		Logger:       common.Logger,
+		EventContainer: &event,
+		ResponseChan:   respChan,
+		Logger:         common.Logger,
 	}
 
 	//
@@ -72,12 +73,12 @@ func TestEventsV2ProcessorError(t *testing.T) {
 
 	respChan := make(chan Response)
 	stopChan := make(chan bool)
-	event := mockEventV2(common.GenerateKey())
+	event := test.BuildV2EventContainer(common.GenerateKey())
 
 	job := Job{
-		Event:        &event,
-		ResponseChan: respChan,
-		Logger:       common.Logger,
+		EventContainer: &event,
+		ResponseChan:   respChan,
+		Logger:         common.Logger,
 	}
 
 	go func() {

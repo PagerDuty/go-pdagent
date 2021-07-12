@@ -76,7 +76,8 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 			}
 
 			sendEvent, customDetails := buildSendEvent(cmdInput)
-			return cmdutil.RunSendCommand(config, sendEvent, customDetails)
+
+			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
 		},
 	}
 

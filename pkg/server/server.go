@@ -16,7 +16,7 @@ import (
 )
 
 type Queue interface {
-	Enqueue(eventsapi.Event) (string, error)
+	Enqueue(*eventsapi.EventContainer) (string, error)
 	Retry(string) (int, error)
 	Shutdown() error
 	Start() error

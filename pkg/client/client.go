@@ -31,7 +31,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 }
 
 // Send an event to the agent daemon server.
-func (c *Client) Send(event eventsapi.EventV2) (*http.Response, error) {
+func (c *Client) Send(event eventsapi.Event) (*http.Response, error) {
 	url := generateURL(c.ServerAddress, "/send")
 
 	body, err := json.Marshal(event)
@@ -46,6 +46,7 @@ func (c *Client) Send(event eventsapi.EventV2) (*http.Response, error) {
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Pd-Event-Version", event.Version().String())
 
 	return c.Do(req)
 }

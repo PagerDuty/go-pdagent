@@ -19,14 +19,19 @@ func TestCommonEnqueueV2(t *testing.T) {
 	mockEndpointV2(200, mockResponse)
 	gock.InterceptClient(DefaultHTTPClient)
 
-	event := EventV2{
-		RoutingKey:  "11863b592c824bfc8989d9cba76abcde",
-		EventAction: "trigger",
-		Payload: PayloadV2{
-			Summary:  "PagerDuty Agent `CreateV1` Test",
-			Source:   "pdagent",
-			Severity: "error",
-		},
+	event := EventContainer{
+		EventVersion: EventVersion2,
+		EventData: []byte(`
+			{
+				"routing_key":  "11863b592c824bfc8989d9cba76abcde",
+				"event_action": "trigger",
+				"payload": {
+					"summary":  "PagerDuty Agent CreateV1 Test",
+					"source":   "pdagent",
+					"severity": "error"
+				}
+			}
+		`),
 	}
 
 	vagueResp, err := Enqueue(context.Background(), &event)
@@ -62,10 +67,15 @@ func TestCommonEnqueueV1(t *testing.T) {
 	mockEndpointV1(200, mockResponse)
 	gock.InterceptClient(DefaultHTTPClient)
 
-	event := EventV1{
-		ServiceKey:  "11863b592c824bfc8989d9cba76abcde",
-		EventType:   "trigger",
-		Description: "PagerDuty Agent `CreateV1` Test",
+	event := EventContainer{
+		EventVersion: EventVersion1,
+		EventData: []byte(`
+			{
+				"service_key": "11863b592c824bfc8989d9cba76abcde",
+				"event_type":  "trigger",
+				"description": "PagerDuty Agent CreateV1 Test"
+			}
+		`),
 	}
 
 	vagueResp, err := Enqueue(context.Background(), &event)

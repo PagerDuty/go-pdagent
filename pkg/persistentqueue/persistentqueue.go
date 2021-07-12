@@ -14,7 +14,7 @@ import (
 )
 
 type EventQueue interface {
-	Enqueue(eventsapi.Event, chan<- eventqueue.Response) error
+	Enqueue(*eventsapi.EventContainer, chan<- eventqueue.Response) error
 	Shutdown()
 }
 
