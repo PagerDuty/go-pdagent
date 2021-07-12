@@ -2,13 +2,12 @@ package eventsapi
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-var endpointV2 = fmt.Sprintf("%v/v2/enqueue", common.PdEventsUrl())
+var endpointV2 = "/v2/enqueue"
 
 // EventV2 corresponds to a V2 event object.
 type EventV2 struct {
@@ -81,6 +80,7 @@ type ResponseV2 struct {
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event *EventV2) (*ResponseV2, error) {
 	var response ResponseV2
-	err := enqueueEvent(context, client, endpointV2, event, &response)
+	requestUrl := common.PdEventsUrl() + endpointV2
+	err := enqueueEvent(context, client, requestUrl, event, &response)
 	return &response, err
 }
