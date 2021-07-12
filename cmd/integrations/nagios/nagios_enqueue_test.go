@@ -34,7 +34,7 @@ func buildCmdArgs(inputs nagiosEnqueueInput) []string {
 		flag string
 		val  string
 	}{
-		{"-k", inputs.routingKey}, {"-t", inputs.notificationType}, {"-n", inputs.sourceType}, {"-y", inputs.dedupKey},
+		{"-k", inputs.serviceKey}, {"-t", inputs.notificationType}, {"-n", inputs.sourceType}, {"-y", inputs.incidentKey},
 	}
 	for _, f := range flags {
 		if f.val != "" {
@@ -56,12 +56,12 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name:          "missingRequiredFlags",
 			inputs:        nagiosEnqueueInput{},
-			expectedError: errors.New("required flag(s) \"notification-type\", \"routing-key\", \"source-type\" not set"),
+			expectedError: errors.New("required flag(s) \"notification-type\", \"service-key\", \"source-type\" not set"),
 		},
 		{
 			name: "invalidNotficationType",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "trigger",
 				sourceType:       "host",
 			},
@@ -70,7 +70,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "invalidSourceType",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "PROBLEM",
 				sourceType:       "invalidSourceType",
 			},
@@ -79,7 +79,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "hostnameNotSetServiceCustomDetails",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "RECOVERY",
 				sourceType:       "service",
 			},
@@ -88,7 +88,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "serviceDescNotSetServiceCustomDetails",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "RECOVERY",
 				sourceType:       "service",
 				customFields: map[string]string{
@@ -100,7 +100,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "serviceStateNotSetServiceCustomDetails",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "RECOVERY",
 				sourceType:       "service",
 				customFields: map[string]string{
@@ -113,7 +113,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "hostnameNotSetHostCustomDetails",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "RECOVERY",
 				sourceType:       "host",
 			},
@@ -122,7 +122,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 		{
 			name: "hoststateNotSetHostCustomDetails",
 			inputs: nagiosEnqueueInput{
-				routingKey:       "abc",
+				serviceKey:       "abc",
 				notificationType: "RECOVERY",
 				sourceType:       "host",
 				customFields: map[string]string{
@@ -158,7 +158,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 		{
 			name: "validSourceHostInput",
 			cmdInputs: nagiosEnqueueInput{
-				routingKey:       "xyz",
+				serviceKey:       "xyz",
 				notificationType: "PROBLEM",
 				sourceType:       "host",
 				customFields: map[string]string{
@@ -170,7 +170,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 		{
 			name: "validSourceServiceInput",
 			cmdInputs: nagiosEnqueueInput{
-				routingKey:       "xyz",
+				serviceKey:       "xyz",
 				notificationType: "PROBLEM",
 				sourceType:       "service",
 				customFields: map[string]string{
@@ -181,12 +181,12 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 			},
 		},
 		{
-			name: "userProvidedDedupKey",
+			name: "userProvidedIncidentKey",
 			cmdInputs: nagiosEnqueueInput{
-				routingKey:       "xyz",
+				serviceKey:       "xyz",
 				notificationType: "PROBLEM",
 				sourceType:       "service",
-				dedupKey:         "somededupkey",
+				incidentKey:      "somededupkey",
 				customFields: map[string]string{
 					"HOSTNAME":     "computer.network",
 					"SERVICESTATE": "down",
@@ -214,9 +214,9 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 			cmd := NewNagiosEnqueueCmd(realConfig)
 			cmd.SetArgs(buildCmdArgs(tt.cmdInputs))
 
-			dedupKey := tt.cmdInputs.dedupKey
+			dedupKey := tt.cmdInputs.incidentKey
 			if dedupKey == "" {
-				dedupKey = buildDedupKey(tt.cmdInputs)
+				dedupKey = buildIncidentKey(tt.cmdInputs)
 			}
 
 			customDetails := map[string]string{
@@ -227,20 +227,16 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 			}
 
 			expectedRequestBody := map[string]interface{}{
-				"routing_key":  tt.cmdInputs.routingKey,
-				"event_action": nagiosToPagerDutyEventType[tt.cmdInputs.notificationType],
-				"dedup_key":    dedupKey,
-				"payload": map[string]interface{}{
-					"summary":        buildEventDescription(tt.cmdInputs),
-					"source":         tt.cmdInputs.customFields["HOSTNAME"],
-					"severity":       defaultNagiosIntegrationSeverity,
-					"custom_details": customDetails,
-				},
+				"service_key":  tt.cmdInputs.serviceKey,
+				"event_type":   nagiosToPagerDutyEventType[tt.cmdInputs.notificationType],
+				"incident_key": dedupKey,
+				"description":  buildEventDescription(tt.cmdInputs),
+				"details":      customDetails,
 			}
 
 			gock.New(cmdutil.GetDefaults().Address).
 				Post("/send").JSON(expectedRequestBody).
-				Reply(200).JSON(map[string]interface{}{"key": tt.cmdInputs.routingKey})
+				Reply(200).JSON(map[string]interface{}{"key": tt.cmdInputs.serviceKey})
 
 			gock.InterceptClient(defaultHTTPClient)
 
@@ -253,7 +249,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 				t.Errorf("error running command `enqueue`: %v", err)
 			}
 
-			assert.Contains(t, out, fmt.Sprintf(`{"key":"%v"}`, tt.cmdInputs.routingKey))
+			assert.Contains(t, out, fmt.Sprintf(`{"key":"%v"}`, tt.cmdInputs.serviceKey))
 		})
 	}
 }
