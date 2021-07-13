@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const url = "https://api.pagerduty.com/agent/2014-03-14/heartbeat/go-pdagent"
+const endpoint = "/agent/2014-03-14/heartbeat/go-pdagent"
 const frequencySeconds = 60 * 60 // Send heartbeat every hour
 const maxRetries = 3
 const maxRetryInterval = 15 * time.Second
@@ -93,6 +93,7 @@ func (hb *heartbeat) beat() {
 }
 
 func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
+	url := common.PdApiUrl() + endpoint
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

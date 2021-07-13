@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 // Normally set at build time.
@@ -37,4 +39,20 @@ func UserAgent() string {
 	date := Date
 
 	return fmt.Sprintf("go-pdagent/%v (%v, commit: %v, date: %v)", version, system, commit, date)
+}
+
+func PdEventsUrl() string {
+	region := viper.GetString("region")
+	if region == "eu" {
+		return "https://events.eu.pagerduty.com"
+	}
+	return "https://events.pagerduty.com"
+}
+
+func PdApiUrl() string {
+	region := viper.GetString("region")
+	if region == "eu" {
+		return "https://api.eu.pagerduty.com"
+	}
+	return "https://api.pagerduty.com"
 }

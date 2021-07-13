@@ -3,9 +3,11 @@ package eventsapi
 import (
 	"context"
 	"net/http"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-const endpointV1 = "https://events.pagerduty.com/generic/2010-04-15/create_event.json"
+const endpointV1 = "/generic/2010-04-15/create_event.json"
 
 // EventV1 corresponds to a V1 event object.
 type EventV1 struct {
@@ -73,6 +75,7 @@ type ResponseV1 struct {
 // service's own.
 func CreateV1(context context.Context, client *http.Client, event *EventV1) (*ResponseV1, error) {
 	var response ResponseV1
-	err := enqueueEvent(context, client, endpointV1, event, &response)
+	url := common.PdEventsUrl() + endpointV1
+	err := enqueueEvent(context, client, url, event, &response)
 	return &response, err
 }

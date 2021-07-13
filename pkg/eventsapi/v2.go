@@ -3,9 +3,11 @@ package eventsapi
 import (
 	"context"
 	"net/http"
+
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 )
 
-const endpointV2 = "https://events.pagerduty.com/v2/enqueue"
+const endpointV2 = "/v2/enqueue"
 
 // EventV2 corresponds to a V2 event object.
 type EventV2 struct {
@@ -78,6 +80,7 @@ type ResponseV2 struct {
 // EnqueueV2 sends an event explicitly to the Events API V2.
 func EnqueueV2(context context.Context, client *http.Client, event *EventV2) (*ResponseV2, error) {
 	var response ResponseV2
-	err := enqueueEvent(context, client, endpointV2, event, &response)
+	url := common.PdEventsUrl() + endpointV2
+	err := enqueueEvent(context, client, url, event, &response)
 	return &response, err
 }
