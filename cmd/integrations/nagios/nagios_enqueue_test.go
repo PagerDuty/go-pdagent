@@ -186,7 +186,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 				serviceKey:       "xyz",
 				notificationType: "PROBLEM",
 				sourceType:       "service",
-				incidentKey:      "somededupkey",
+				incidentKey:      "someincidentkey",
 				customFields: map[string]string{
 					"HOSTNAME":     "computer.network",
 					"SERVICESTATE": "down",
@@ -214,9 +214,9 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 			cmd := NewNagiosEnqueueCmd(realConfig)
 			cmd.SetArgs(buildCmdArgs(tt.cmdInputs))
 
-			dedupKey := tt.cmdInputs.incidentKey
-			if dedupKey == "" {
-				dedupKey = buildIncidentKey(tt.cmdInputs)
+			incidentKey := tt.cmdInputs.incidentKey
+			if incidentKey == "" {
+				incidentKey = buildIncidentKey(tt.cmdInputs)
 			}
 
 			customDetails := map[string]string{
@@ -229,7 +229,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 			expectedRequestBody := map[string]interface{}{
 				"service_key":  tt.cmdInputs.serviceKey,
 				"event_type":   nagiosToPagerDutyEventType[tt.cmdInputs.notificationType],
-				"incident_key": dedupKey,
+				"incident_key": incidentKey,
 				"description":  buildEventDescription(tt.cmdInputs),
 				"details":      customDetails,
 			}
