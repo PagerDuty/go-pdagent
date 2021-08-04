@@ -20,8 +20,7 @@ type sensuCommandInput struct {
 
 var errCouldNotReadStdin = errors.New(`could not read stdin for sensu enqueue command`)
 var errCheckResultNotValidJson = errors.New("could not unmarshal check result, perhaps stdin did not contain valid JSON")
-var errActionNotPresent = errors.New(`check result must contain and "action" field`)
-var errActionMustBeAString = errors.New(`key "action" must be of type string`)
+var errActionNotPresent = errors.New(`could not get event action, set the "action" key`)
 var errCouldNotBuildDedupKey = errors.New(`could not build incident key, set the "id" field or "client.name" and "check.name" fields`)
 var errCouldNotBuildSummary = errors.New(`could not build summary, set the "check.output" field`)
 
@@ -99,20 +98,15 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV2, error) {
 }
 
 func getEventAction(cmdInput sensuCommandInput) (string, error) {
-	action, actionPresent := cmdInput.checkResult["action"]
-	if !actionPresent {
-		return "", errActionNotPresent
+	if action, actionPresent := cmdInput.checkResult["action"]; actionPresent {
+		if actionString, isActionString := action.(string); isActionString {
+			if pagerDutyEventAction, actionPresent := sensuToPagerDutyEventType[actionString]; actionPresent {
+				return pagerDutyEventAction, nil
+			}
+			return sensuToPagerDutyEventType["create"], nil
+		}
 	}
-	actionString, isActionString := action.(string)
-	if !isActionString {
-		return "", errActionMustBeAString
-	}
-
-	if pagerDutyEventAction, actionPresent := sensuToPagerDutyEventType[actionString]; actionPresent {
-		return pagerDutyEventAction, nil
-	}
-
-	return sensuToPagerDutyEventType["create"], nil
+	return "", errActionNotPresent
 }
 
 func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
@@ -120,28 +114,15 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return cmdInput.incidentKey, nil
 	}
 
-	client, clientExists := cmdInput.checkResult["client"]
-	check, checkExists := cmdInput.checkResult["check"]
-	if clientExists && checkExists {
-		clientMap, isClientMap := client.(map[string]interface{})
-		checkMap, isCheckMap := check.(map[string]interface{})
-		if isClientMap && isCheckMap {
-			clientName, clientNamePresent := clientMap["name"]
-			checkName, checkNamePresent := checkMap["name"]
-			if clientNamePresent && checkNamePresent {
-				clientNameString, isClientNameString := clientName.(string)
-				checkNameString, isCheckNameString := checkName.(string)
-				if isCheckNameString && isClientNameString {
-					return fmt.Sprintf("%v/%v", clientNameString, checkNameString), nil
-				}
-			}
-		}
+	clientName, isClientNameString := getNameStringField(cmdInput.checkResult, "client")
+	checkName, isCheckNameString := getNameStringField(cmdInput.checkResult, "check")
+
+	if isClientNameString && isCheckNameString {
+		return fmt.Sprintf("%v/%v", clientName, checkName), nil
 	}
 
-	id, idPresent := cmdInput.checkResult["id"]
-	if idPresent {
-		idString, isIdString := id.(string)
-		if isIdString {
+	if id, idPresent := cmdInput.checkResult["id"]; idPresent {
+		if idString, isIdString := id.(string); isIdString {
 			return idString, nil
 		}
 	}
@@ -151,13 +132,23 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
 	// The check field was validated in `buildDedupKey`
-	checkOutput, checkOutputPresent := cmdInput.checkResult["check"].(map[string]interface{})["output"]
-	if checkOutputPresent {
-		checkOutputString, isCheckOutputString := checkOutput.(string)
-		if isCheckOutputString {
-			return fmt.Sprintf("%v : %v", dedupKey, checkOutputString), nil
+	if output, outputPresent := cmdInput.checkResult["check"].(map[string]interface{})["output"]; outputPresent {
+		if outputString, isOutputString := output.(string); isOutputString {
+			return fmt.Sprintf("%v : %v", dedupKey, outputString), nil
 		}
 	}
 
 	return "", errCouldNotBuildSummary
+}
+
+func getNameStringField(inputMap map[string]interface{}, key string) (string, bool) {
+	if value, ok := inputMap[key]; ok {
+		if valueMap, isValueMap := value.(map[string]interface{}); isValueMap {
+			if name, namePresent := valueMap["name"]; namePresent {
+				nameString, isNameString := name.(string)
+				return nameString, isNameString
+			}
+		}
+	}
+	return "", false
 }
