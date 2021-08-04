@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
@@ -67,12 +68,12 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 }
 
 func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV2, error) {
-	dedupKey, err := buildDedupKey(cmdInput)
+	eventAction, err := getEventAction(cmdInput)
 	if err != nil {
 		return eventsapi.EventV2{}, err
 	}
 
-	eventAction, err := getEventAction(cmdInput)
+	dedupKey, err := buildDedupKey(cmdInput)
 	if err != nil {
 		return eventsapi.EventV2{}, err
 	}
@@ -114,8 +115,8 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return cmdInput.incidentKey, nil
 	}
 
-	clientName, isClientNameString := getNameStringField(cmdInput.checkResult, "client")
-	checkName, isCheckNameString := getNameStringField(cmdInput.checkResult, "check")
+	clientName, isClientNameString := getNestedStringField(cmdInput.checkResult, "client.name")
+	checkName, isCheckNameString := getNestedStringField(cmdInput.checkResult, "check.name")
 
 	if isClientNameString && isCheckNameString {
 		return fmt.Sprintf("%v/%v", clientName, checkName), nil
@@ -131,23 +132,29 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 }
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
-	// The check field was validated in `buildDedupKey`
-	if output, outputPresent := cmdInput.checkResult["check"].(map[string]interface{})["output"]; outputPresent {
-		if outputString, isOutputString := output.(string); isOutputString {
-			return fmt.Sprintf("%v : %v", dedupKey, outputString), nil
-		}
+	if output, outputPresent := getNestedStringField(cmdInput.checkResult, "check.output"); outputPresent {
+		return fmt.Sprintf("%v : %v", dedupKey, output), nil
 	}
 
 	return "", errCouldNotBuildSummary
 }
 
-func getNameStringField(inputMap map[string]interface{}, key string) (string, bool) {
-	if value, ok := inputMap[key]; ok {
-		if valueMap, isValueMap := value.(map[string]interface{}); isValueMap {
-			if name, namePresent := valueMap["name"]; namePresent {
-				nameString, isNameString := name.(string)
-				return nameString, isNameString
+func getNestedStringField(inputMap map[string]interface{}, selector string) (string, bool) {
+	selectors := strings.Split(selector, ".")
+
+	currentMap := inputMap
+	for index, key := range selectors {
+		if value, ok := currentMap[key]; ok {
+			if index+1 == len(selectors) {
+				result, isResultString := value.(string)
+				return result, isResultString
+			} else if mapVal, isMapVal := value.(map[string]interface{}); isMapVal {
+				currentMap = mapVal
+			} else {
+				return "", false
 			}
+		} else {
+			return "", false
 		}
 	}
 	return "", false
