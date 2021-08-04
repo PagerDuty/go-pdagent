@@ -22,14 +22,6 @@ import (
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
-func StringMapToInterfaceMap(stringMap map[string]string) map[string]interface{} {
-	interfaceMap := map[string]interface{}{}
-	for k, v := range stringMap {
-		interfaceMap[k] = v
-	}
-	return interfaceMap
-}
-
 func RunSendCommand(config *Config, sendEvent eventsapi.Event) error {
 	c, _ := config.Client()
 

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
@@ -115,8 +114,8 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return cmdInput.incidentKey, nil
 	}
 
-	clientName, isClientNameString := getNestedStringField(cmdInput.checkResult, "client.name")
-	checkName, isCheckNameString := getNestedStringField(cmdInput.checkResult, "check.name")
+	clientName, isClientNameString := cmdutil.GetNestedStringField(cmdInput.checkResult, "client.name")
+	checkName, isCheckNameString := cmdutil.GetNestedStringField(cmdInput.checkResult, "check.name")
 
 	if isClientNameString && isCheckNameString {
 		return fmt.Sprintf("%v/%v", clientName, checkName), nil
@@ -132,30 +131,9 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 }
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
-	if output, outputPresent := getNestedStringField(cmdInput.checkResult, "check.output"); outputPresent {
+	if output, outputPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "check.output"); outputPresent {
 		return fmt.Sprintf("%v : %v", dedupKey, output), nil
 	}
 
 	return "", errCouldNotBuildSummary
-}
-
-func getNestedStringField(inputMap map[string]interface{}, selector string) (string, bool) {
-	selectors := strings.Split(selector, ".")
-
-	currentMap := inputMap
-	for index, key := range selectors {
-		if value, ok := currentMap[key]; ok {
-			if index+1 == len(selectors) {
-				result, isResultString := value.(string)
-				return result, isResultString
-			} else if mapVal, isMapVal := value.(map[string]interface{}); isMapVal {
-				currentMap = mapVal
-			} else {
-				return "", false
-			}
-		} else {
-			return "", false
-		}
-	}
-	return "", false
 }
