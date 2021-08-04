@@ -18,16 +18,22 @@ type sensuCommandInput struct {
 	checkResult    map[string]interface{}
 }
 
-var errCouldNotReadStdin = errors.New("could not read stdin for sensu enqueue command")
+var errCouldNotReadStdin = errors.New(`could not read stdin for sensu enqueue command`)
 var errCheckResultNotValidJson = errors.New("could not unmarshal check result, perhaps stdin did not contain valid JSON")
+var errActionNotPresent = errors.New(`check result must contain and "action" field`)
+var errActionValueNotValid = errors.New(`check result "action" must be "resolve" or "create"`)
+var errActionMustBeAString = errors.New(`key "action" must be of type string`)
+var errCouldNotBuildDedupKey = errors.New(`could not build incident key, set the "id" field or "client.name" and "check.name" fields`)
+var errCouldNotBuildSummary = errors.New(`could not build summary, set the "check.output" field`)
 
 var sensuToPagerDutyEventType = map[string]string{
 	"resolve": "resolve",
 	"create":  "trigger",
 }
 
+// PagerDuty will set these fields during event transformation
 const sensuInegrationSource = "SET_BY_PAGERDUTY"
-const sensuIntegraionSeverity = "error" // This will be set later during the PagerDuty event transform
+const sensuIntegraionSeverity = "error"
 
 func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	var cmdInput sensuCommandInput
@@ -45,12 +51,7 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 				return errCheckResultNotValidJson
 			}
 
-			err = validateSensuSendCommand(cmdInput)
-			if err != nil {
-				return err
-			}
-
-			sendEvent := buildSendEvent(cmdInput)
+			sendEvent, err := buildSendEvent(cmdInput)
 
 			return cmdutil.RunSendCommand(config, &sendEvent)
 		},
@@ -64,51 +65,102 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func validateSensuSendCommand(cmdInput sensuCommandInput) error {
-	return nil
-}
+func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV2, error) {
+	dedupKey, err := buildDedupKey(cmdInput)
+	if err != nil {
+		return eventsapi.EventV2{}, err
+	}
 
-func buildSendEvent(cmdInput sensuCommandInput) eventsapi.EventV2 {
-	dedupKey := buildDedupKey(cmdInput)
+	eventAction, err := getEventAction(cmdInput)
+	if err != nil {
+		return eventsapi.EventV2{}, err
+	}
+
+	summary, err := buildSummary(dedupKey, cmdInput)
+	if err != nil {
+		return eventsapi.EventV2{}, err
+	}
+
 	sendEvent := eventsapi.EventV2{
 		RoutingKey:  cmdInput.integrationKey,
-		EventAction: getEventAction(cmdInput.checkResult["action"]),
+		EventAction: eventAction,
 		DedupKey:    dedupKey,
 		Payload: eventsapi.PayloadV2{
-			Summary:       buildSummary(dedupKey, cmdInput),
+			Summary:       summary,
 			Source:        sensuInegrationSource,
 			Severity:      sensuIntegraionSeverity,
 			CustomDetails: cmdInput.checkResult,
 		},
 	}
 
-	return sendEvent
+	return sendEvent, nil
 }
 
-func getEventAction(action interface{}) string {
-	if pagerDutyEventAction, ok := sensuToPagerDutyEventType[action.(string)]; ok {
-		return pagerDutyEventAction
+func getEventAction(cmdInput sensuCommandInput) (string, error) {
+	action, actionPresent := cmdInput.checkResult["action"]
+	if !actionPresent {
+		return "", errActionNotPresent
 	}
-	return sensuToPagerDutyEventType["create"]
+	actionString, isActionString := action.(string)
+	if !isActionString {
+		return "", errActionMustBeAString
+	}
+	allowedActions := []string{"create", "resolve"}
+	err := cmdutil.ValidateEnumField(actionString, allowedActions, errActionValueNotValid)
+	if err != nil {
+		return "", err
+	}
+
+	if pagerDutyEventAction, ok := sensuToPagerDutyEventType[actionString]; ok {
+		return pagerDutyEventAction, nil
+	}
+
+	return sensuToPagerDutyEventType["create"], nil
 }
 
-func buildDedupKey(cmdInput sensuCommandInput) string {
+func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 	if cmdInput.incidentKey != "" {
-		return cmdInput.incidentKey
+		return cmdInput.incidentKey, nil
 	}
 
 	client, clientExists := cmdInput.checkResult["client"]
 	check, checkExists := cmdInput.checkResult["check"]
 	if clientExists && checkExists {
-		clientName := client.(map[string]interface{})["name"].(string)
-		checkName := check.(map[string]interface{})["name"].(string)
-		return fmt.Sprintf("%v/%v", clientName, checkName)
+		clientMap, isClientMap := client.(map[string]interface{})
+		checkMap, isCheckMap := check.(map[string]interface{})
+		if isClientMap && isCheckMap {
+			clientName, clientNamePresent := clientMap["name"]
+			checkName, checkNamePresent := checkMap["name"]
+			if clientNamePresent && checkNamePresent {
+				clientNameString, isClientNameString := clientName.(string)
+				checkNameString, isCheckNameString := checkName.(string)
+				if isCheckNameString && isClientNameString {
+					return fmt.Sprintf("%v/%v", clientNameString, checkNameString), nil
+				}
+			}
+		}
 	}
 
-	return cmdInput.checkResult["id"].(string)
+	id, idPresent := cmdInput.checkResult["id"]
+	if idPresent {
+		idString, isIdString := id.(string)
+		if isIdString {
+			return idString, nil
+		}
+	}
+
+	return "", errCouldNotBuildDedupKey
 }
 
-func buildSummary(dedupKey string, cmdInput sensuCommandInput) string {
-	checkOutput := cmdInput.checkResult["check"].(map[string]interface{})["output"].(string)
-	return fmt.Sprintf("%v : %v", dedupKey, checkOutput)
+func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
+	// The check field was validated in `buildDedupKey`
+	checkOutput, checkOutputPresent := cmdInput.checkResult["check"].(map[string]interface{})["output"]
+	if checkOutputPresent {
+		checkOutputString, isCheckOutputString := checkOutput.(string)
+		if isCheckOutputString {
+			return fmt.Sprintf("%v : %v", dedupKey, checkOutputString), nil
+		}
+	}
+
+	return "", errCouldNotBuildSummary
 }
