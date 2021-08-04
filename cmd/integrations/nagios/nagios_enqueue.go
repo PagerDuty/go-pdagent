@@ -73,9 +73,9 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 				return err
 			}
 
-			sendEvent, customDetails := buildSendEvent(cmdInput)
+			sendEvent := buildSendEvent(cmdInput)
 
-			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
+			return cmdutil.RunSendCommand(config, &sendEvent)
 		},
 	}
 
@@ -92,21 +92,21 @@ func NewNagiosEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func buildSendEvent(cmdInputs nagiosEnqueueInput) (eventsapi.EventV1, map[string]string) {
+func buildSendEvent(cmdInputs nagiosEnqueueInput) eventsapi.EventV1 {
 	sendEvent := eventsapi.EventV1{
 		ServiceKey:  cmdInputs.serviceKey,
 		EventType:   nagiosToPagerDutyEventType[cmdInputs.notificationType],
 		IncidentKey: cmdInputs.incidentKey,
 		Description: buildEventDescription(cmdInputs),
+		Details:     cmdutil.StringMapToInterfaceMap(cmdInputs.customFields),
 	}
 	if sendEvent.IncidentKey == "" {
 		sendEvent.IncidentKey = buildIncidentKey(cmdInputs)
 	}
 
-	customDetails := cmdInputs.customFields
-	customDetails["pd_nagios_object"] = cmdInputs.sourceType
+	sendEvent.Details["pd_nagios_object"] = cmdInputs.sourceType
 
-	return sendEvent, customDetails
+	return sendEvent
 }
 
 func buildEventDescription(cmdInputs nagiosEnqueueInput) string {

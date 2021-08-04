@@ -37,7 +37,8 @@ func NewSendCmd(config *cmdutil.Config) *cobra.Command {
 		Required flags: "service-key", "event-type"`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
+			sendEvent.Details = cmdutil.StringMapToInterfaceMap(customDetails)
+			return cmdutil.RunSendCommand(config, &sendEvent)
 		},
 	}
 

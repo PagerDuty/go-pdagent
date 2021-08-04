@@ -32,7 +32,8 @@ func NewEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 		Use:   "enqueue",
 		Short: "Queue up a trigger, acknowledge, or resolve v2 event to PagerDuty",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmdutil.RunSendCommand(config, &sendEvent, customDetails)
+			sendEvent.Payload.CustomDetails = cmdutil.StringMapToInterfaceMap(customDetails)
+			return cmdutil.RunSendCommand(config, &sendEvent)
 		},
 	}
 
