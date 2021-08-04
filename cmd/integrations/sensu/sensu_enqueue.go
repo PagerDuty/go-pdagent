@@ -21,7 +21,6 @@ type sensuCommandInput struct {
 var errCouldNotReadStdin = errors.New(`could not read stdin for sensu enqueue command`)
 var errCheckResultNotValidJson = errors.New("could not unmarshal check result, perhaps stdin did not contain valid JSON")
 var errActionNotPresent = errors.New(`check result must contain and "action" field`)
-var errActionValueNotValid = errors.New(`check result "action" must be "resolve" or "create"`)
 var errActionMustBeAString = errors.New(`key "action" must be of type string`)
 var errCouldNotBuildDedupKey = errors.New(`could not build incident key, set the "id" field or "client.name" and "check.name" fields`)
 var errCouldNotBuildSummary = errors.New(`could not build summary, set the "check.output" field`)
@@ -52,6 +51,9 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 			}
 
 			sendEvent, err := buildSendEvent(cmdInput)
+			if err != nil {
+				return err
+			}
 
 			return cmdutil.RunSendCommand(config, &sendEvent)
 		},
@@ -105,13 +107,8 @@ func getEventAction(cmdInput sensuCommandInput) (string, error) {
 	if !isActionString {
 		return "", errActionMustBeAString
 	}
-	allowedActions := []string{"create", "resolve"}
-	err := cmdutil.ValidateEnumField(actionString, allowedActions, errActionValueNotValid)
-	if err != nil {
-		return "", err
-	}
 
-	if pagerDutyEventAction, ok := sensuToPagerDutyEventType[actionString]; ok {
+	if pagerDutyEventAction, actionPresent := sensuToPagerDutyEventType[actionString]; actionPresent {
 		return pagerDutyEventAction, nil
 	}
 
