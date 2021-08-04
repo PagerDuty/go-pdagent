@@ -98,13 +98,11 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV2, error) {
 }
 
 func getEventAction(cmdInput sensuCommandInput) (string, error) {
-	if action, actionPresent := cmdInput.checkResult["action"]; actionPresent {
-		if actionString, isActionString := action.(string); isActionString {
-			if pagerDutyEventAction, actionPresent := sensuToPagerDutyEventType[actionString]; actionPresent {
-				return pagerDutyEventAction, nil
-			}
-			return sensuToPagerDutyEventType["create"], nil
+	if action, isActionPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "action"); isActionPresent {
+		if pagerDutyEventAction, isActionPresent := sensuToPagerDutyEventType[action]; isActionPresent {
+			return pagerDutyEventAction, nil
 		}
+		return sensuToPagerDutyEventType["create"], nil
 	}
 	return "", errActionNotPresent
 }
@@ -121,10 +119,8 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return fmt.Sprintf("%v/%v", clientName, checkName), nil
 	}
 
-	if id, idPresent := cmdInput.checkResult["id"]; idPresent {
-		if idString, isIdString := id.(string); isIdString {
-			return idString, nil
-		}
+	if id, isIdPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "id"); isIdPresent {
+		return id, nil
 	}
 
 	return "", errCouldNotBuildDedupKey
