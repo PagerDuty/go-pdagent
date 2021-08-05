@@ -21,6 +21,7 @@ import (
 
 	"github.com/PagerDuty/go-pdagent/cmd/integrations/nagios"
 	"github.com/PagerDuty/go-pdagent/cmd/integrations/sensu"
+	"github.com/PagerDuty/go-pdagent/cmd/integrations/zabbix"
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/common"
 
@@ -92,6 +93,7 @@ func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(nagios.NewNagiosCmd(config))
 	rootCmd.AddCommand(sensu.NewSensuCmd(config))
+	rootCmd.AddCommand(zabbix.NewZabbixCmd(config))
 
 	return rootCmd
 }
