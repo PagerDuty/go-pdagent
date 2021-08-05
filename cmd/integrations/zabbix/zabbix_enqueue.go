@@ -45,12 +45,12 @@ func NewZabbixEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 func buildSendEvent(cmdInput zabbixCommandInput) (eventsapi.EventV2, error) {
 	dedupKey, err := buildDedupKey(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, nil
+		return eventsapi.EventV2{}, errCouldNotBuildDedupKey
 	}
 
 	summary, err := buildSummary(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, nil
+		return eventsapi.EventV2{}, errCouldNotBuildSummary
 	}
 
 	client, clientUrl := getClientAndClientUrl(cmdInput.details)
@@ -127,7 +127,7 @@ func parseRawDetails(rawDetails string) map[string]string {
 		} else if key != "" {
 			details[key] += detail[0]
 		} else {
-			details[detail[0]] = detail[1]
+			details[detail[0]] = detail[0]
 		}
 	}
 
