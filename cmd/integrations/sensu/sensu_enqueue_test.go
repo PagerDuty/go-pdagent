@@ -48,7 +48,7 @@ func buildCmdArgs(inputs sensuCommandInput) []string {
 	return args
 }
 
-func TestNagiosEnqueue_errors(t *testing.T) {
+func TestSensuEnqueue_errors(t *testing.T) {
 	tests := []struct {
 		name          string
 		inputs        sensuCommandInput
@@ -197,7 +197,7 @@ func TestNagiosEnqueue_errors(t *testing.T) {
 	}
 }
 
-func TestNagiosEnqueue_validInputs(t *testing.T) {
+func TestSensuEnqueue_validInputs(t *testing.T) {
 	tests := []struct {
 		name                 string
 		cmdInputs            sensuCommandInput
