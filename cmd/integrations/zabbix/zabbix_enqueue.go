@@ -16,10 +16,6 @@ type zabbixCommandInput struct {
 	details        map[string]string
 }
 
-// These fields will be set by PagerDuty during event transformation
-var zabbixSeverity = "error"
-var zabbixSource = "SET_BY_PAGERDUTY"
-
 var errCouldNotBuildDedupKey = errors.New(`could not build dedupKey, ensure event contains "incident_key", or "id" and "hostname"`)
 var errCouldNotBuildSummary = errors.New(`could not build summary, ensure event contains "name", "status", and "hostname"`)
 
@@ -42,31 +38,27 @@ func NewZabbixEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func buildSendEvent(cmdInput zabbixCommandInput) (eventsapi.EventV2, error) {
+func buildSendEvent(cmdInput zabbixCommandInput) (eventsapi.EventV1, error) {
 	dedupKey, err := buildDedupKey(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, errCouldNotBuildDedupKey
+		return eventsapi.EventV1{}, errCouldNotBuildDedupKey
 	}
 
 	summary, err := buildSummary(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, errCouldNotBuildSummary
+		return eventsapi.EventV1{}, errCouldNotBuildSummary
 	}
 
 	client, clientUrl := getClientAndClientUrl(cmdInput.details)
 
-	sendEvent := eventsapi.EventV2{
-		RoutingKey:  cmdInput.integrationKey,
-		EventAction: cmdInput.messageType,
-		DedupKey:    dedupKey,
+	sendEvent := eventsapi.EventV1{
+		ServiceKey:  cmdInput.integrationKey,
+		EventType:   cmdInput.messageType,
+		IncidentKey: dedupKey,
 		Client:      client,
-		ClientUrl:   clientUrl,
-		Payload: eventsapi.PayloadV2{
-			Summary:       summary,
-			Severity:      zabbixSeverity,
-			Source:        zabbixSource,
-			CustomDetails: cmdutil.StringMapToInterfaceMap(cmdInput.details),
-		},
+		ClientURL:   clientUrl,
+		Description: summary,
+		Details:     cmdutil.StringMapToInterfaceMap(cmdInput.details),
 	}
 
 	return sendEvent, nil
