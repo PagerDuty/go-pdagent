@@ -29,10 +29,6 @@ var sensuToPagerDutyEventType = map[string]string{
 	"create":  "trigger",
 }
 
-// PagerDuty will set these fields during event transformation
-const sensuInegrationSource = "SET_BY_PAGERDUTY"
-const sensuIntegraionSeverity = "error"
-
 func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	var cmdInput sensuCommandInput
 	cmd := &cobra.Command{
@@ -66,32 +62,28 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 	return cmd
 }
 
-func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV2, error) {
+func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV1, error) {
 	eventAction, err := getEventAction(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, err
+		return eventsapi.EventV1{}, err
 	}
 
 	dedupKey, err := buildDedupKey(cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, err
+		return eventsapi.EventV1{}, err
 	}
 
 	summary, err := buildSummary(dedupKey, cmdInput)
 	if err != nil {
-		return eventsapi.EventV2{}, err
+		return eventsapi.EventV1{}, err
 	}
 
-	sendEvent := eventsapi.EventV2{
-		RoutingKey:  cmdInput.integrationKey,
-		EventAction: eventAction,
-		DedupKey:    dedupKey,
-		Payload: eventsapi.PayloadV2{
-			Summary:       summary,
-			Source:        sensuInegrationSource,
-			Severity:      sensuIntegraionSeverity,
-			CustomDetails: cmdInput.checkResult,
-		},
+	sendEvent := eventsapi.EventV1{
+		ServiceKey:  cmdInput.integrationKey,
+		EventType:   eventAction,
+		IncidentKey: dedupKey,
+		Description: summary,
+		Details:     cmdInput.checkResult,
 	}
 
 	return sendEvent, nil

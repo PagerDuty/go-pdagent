@@ -217,21 +217,17 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 				},
 			},
 			expectedResponseBody: map[string]interface{}{
-				"routing_key":  "sensu_integration_key",
-				"event_action": "trigger",
-				"dedup_key":    "clientname/checkname",
-				"payload": map[string]interface{}{
-					"summary":  "clientname/checkname : output",
-					"severity": sensuIntegraionSeverity,
-					"source":   sensuInegrationSource,
-					"custom_details": map[string]interface{}{
-						"action": "action",
-						"check": map[string]interface{}{
-							"name":   "checkname",
-							"output": "output",
-						},
-						"client": map[string]interface{}{"name": "clientname"},
+				"service_key":  "sensu_integration_key",
+				"event_type":   "trigger",
+				"incident_key": "clientname/checkname",
+				"description":  "clientname/checkname : output",
+				"details": map[string]interface{}{
+					"action": "action",
+					"check": map[string]interface{}{
+						"name":   "checkname",
+						"output": "output",
 					},
+					"client": map[string]interface{}{"name": "clientname"},
 				},
 			},
 		},
@@ -246,18 +242,14 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 				},
 			},
 			expectedResponseBody: map[string]interface{}{
-				"routing_key":  "sensu_integration_key",
-				"event_action": "trigger",
-				"dedup_key":    "some_id",
-				"payload": map[string]interface{}{
-					"summary":  "some_id : output",
-					"severity": sensuIntegraionSeverity,
-					"source":   sensuInegrationSource,
-					"custom_details": map[string]interface{}{
-						"action": "action",
-						"check":  map[string]interface{}{"output": "output"},
-						"id":     "some_id",
-					},
+				"service_key":  "sensu_integration_key",
+				"event_type":   "trigger",
+				"incident_key": "some_id",
+				"description":  "some_id : output",
+				"details": map[string]interface{}{
+					"action": "action",
+					"check":  map[string]interface{}{"output": "output"},
+					"id":     "some_id",
 				},
 			},
 		},
@@ -272,17 +264,13 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 				incidentKey: "userProvidedDedupKey",
 			},
 			expectedResponseBody: map[string]interface{}{
-				"routing_key":  "sensu_integration_key",
-				"event_action": "trigger",
-				"dedup_key":    "userProvidedDedupKey",
-				"payload": map[string]interface{}{
-					"summary":  "userProvidedDedupKey : output",
-					"severity": sensuIntegraionSeverity,
-					"source":   sensuInegrationSource,
-					"custom_details": map[string]interface{}{
-						"action": "action",
-						"check":  map[string]interface{}{"output": "output"},
-					},
+				"service_key":  "sensu_integration_key",
+				"event_type":   "trigger",
+				"incident_key": "userProvidedDedupKey",
+				"description":  "userProvidedDedupKey : output",
+				"details": map[string]interface{}{
+					"action": "action",
+					"check":  map[string]interface{}{"output": "output"},
 				},
 			},
 		},
@@ -297,17 +285,13 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 				incidentKey: "userProvidedDedupKey",
 			},
 			expectedResponseBody: map[string]interface{}{
-				"routing_key":  "sensu_integration_key",
-				"event_action": "trigger",
-				"dedup_key":    "userProvidedDedupKey",
-				"payload": map[string]interface{}{
-					"summary":  "userProvidedDedupKey : output",
-					"severity": sensuIntegraionSeverity,
-					"source":   sensuInegrationSource,
-					"custom_details": map[string]interface{}{
-						"action": "create",
-						"check":  map[string]interface{}{"output": "output"},
-					},
+				"service_key":  "sensu_integration_key",
+				"event_type":   "trigger",
+				"incident_key": "userProvidedDedupKey",
+				"description":  "userProvidedDedupKey : output",
+				"details": map[string]interface{}{
+					"action": "create",
+					"check":  map[string]interface{}{"output": "output"},
 				},
 			},
 		},
@@ -322,17 +306,13 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 				incidentKey: "userProvidedDedupKey",
 			},
 			expectedResponseBody: map[string]interface{}{
-				"routing_key":  "sensu_integration_key",
-				"event_action": "resolve",
-				"dedup_key":    "userProvidedDedupKey",
-				"payload": map[string]interface{}{
-					"summary":  "userProvidedDedupKey : output",
-					"severity": sensuIntegraionSeverity,
-					"source":   sensuInegrationSource,
-					"custom_details": map[string]interface{}{
-						"action": "resolve",
-						"check":  map[string]interface{}{"output": "output"},
-					},
+				"service_key":  "sensu_integration_key",
+				"event_type":   "resolve",
+				"incident_key": "userProvidedDedupKey",
+				"description":  "userProvidedDedupKey : output",
+				"details": map[string]interface{}{
+					"action": "resolve",
+					"check":  map[string]interface{}{"output": "output"},
 				},
 			},
 		},
