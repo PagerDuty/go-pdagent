@@ -90,7 +90,7 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV1, error) {
 }
 
 func getEventAction(cmdInput sensuCommandInput) (string, error) {
-	if action, isActionPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "action"); isActionPresent {
+	if action, isActionString := cmdutil.ValidateMapFieldIsString(cmdInput.checkResult, "action"); isActionString {
 		if pagerDutyEventAction, isActionPresent := sensuToPagerDutyEventType[action]; isActionPresent {
 			return pagerDutyEventAction, nil
 		}
@@ -104,14 +104,20 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return cmdInput.incidentKey, nil
 	}
 
-	clientName, isClientNameString := cmdutil.GetNestedStringField(cmdInput.checkResult, "client.name")
-	checkName, isCheckNameString := cmdutil.GetNestedStringField(cmdInput.checkResult, "check.name")
+	var clientName, checkName string
+	var isClientNameString, isCheckNameString bool
+	if client, isClientMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "client"); isClientMap {
+		clientName, isClientNameString = cmdutil.ValidateMapFieldIsString(client, "name")
+	}
+	if check, isCheckMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "check"); isCheckMap {
+		checkName, isCheckNameString = cmdutil.ValidateMapFieldIsString(check, "name")
+	}
 
 	if isClientNameString && isCheckNameString {
 		return fmt.Sprintf("%v/%v", clientName, checkName), nil
 	}
 
-	if id, isIdPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "id"); isIdPresent {
+	if id, isIdString := cmdutil.ValidateMapFieldIsString(cmdInput.checkResult, "id"); isIdString {
 		return id, nil
 	}
 
@@ -119,8 +125,10 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 }
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
-	if output, outputPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "check.output"); outputPresent {
-		return fmt.Sprintf("%v : %v", dedupKey, output), nil
+	if check, isCheckMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "check"); isCheckMap {
+		if output, isOutputString := cmdutil.ValidateMapFieldIsString(check, "check.output"); isOutputString {
+			return fmt.Sprintf("%v : %v", dedupKey, output), nil
+		}
 	}
 
 	return "", errCouldNotBuildSummary
