@@ -94,6 +94,8 @@ func getEventAction(cmdInput sensuCommandInput) (string, error) {
 		if pagerDutyEventAction, isActionPresent := sensuToPagerDutyEventType[action]; isActionPresent {
 			return pagerDutyEventAction, nil
 		}
+
+		// If `action` isn't `resolve` or `create`, set the event action to `trigger`
 		return sensuToPagerDutyEventType["create"], nil
 	}
 	return "", errActionNotPresent
