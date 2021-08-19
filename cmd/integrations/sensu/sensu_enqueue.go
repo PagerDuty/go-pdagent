@@ -128,7 +128,7 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
 	if check, isCheckMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "check"); isCheckMap {
-		if output, isOutputString := cmdutil.ValidateMapFieldIsString(check, "check.output"); isOutputString {
+		if output, isOutputString := cmdutil.ValidateMapFieldIsString(check, "output"); isOutputString {
 			return fmt.Sprintf("%v : %v", dedupKey, output), nil
 		}
 	}
