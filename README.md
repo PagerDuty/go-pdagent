@@ -15,19 +15,11 @@ If you're looking for a more comprehensive PagerDuty API Go client library and C
 
 ## Installation
 
-Currently the agent needs to be built from source, but releasing pre-built binaries and distributing through common package managers is on our roadmap.
-
-For the time being:
-
-- Install Go: https://golang.org/doc/install#install
-- Clone the project: https://github.com/PagerDuty/go-pdagent
-- Run `make build`
-
-You should now have a working `pdagent` binary.
+Binaries for our officially supported platforms can be found on the [releases page][].
 
 ## Usage
 
-On first run we recommend running `pdagent init` to generate a default config file. By default during local development this file will live in `~/.pdagent` along with any other artifacts.
+On first run we recommend running `pdagent init` to generate a default config file. By default this file will live in `~/.pdagent` along with any other artifacts.
 
 Once the config has been created, to start the daemon:
 
@@ -53,29 +45,6 @@ pdagent enqueue \
   -f some_field=some_value
 ```
 
-## Releasing
-
-For local builds and releases, install GoReleaser: https://goreleaser.com/
-
-Builds are signed with GPG. To test your configuration, run the following:
-
-```
-gpg --list-secret
-```
-
-If nothing was output, run the following (for our purposes we recommend leaving the passphrase blank):
-
-```
-gpg --full-generate-key
-```
-
-Once GPG is set up, there are two commands for building:
-
-```bash
-make release # Regular distributable release, with publishing.
-make release-test # To build a local snapshot release without publishing.
-```
-
 ## Architecture
 
 ![pdagent architecture diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/PagerDuty/go-pdagent/main/docs/architecture-diagram.txt)
@@ -86,27 +55,9 @@ At a high level, the agent has three key components:
 - Client: An HTTP client to simplify making requests against the server.
 - CLI: A command line tool for working with both the server and client commands.
 
-The server leverages several packages found under `pkg`, described below.
+## Development
 
-### `persistentqueue`
-
-A database-backed event queue, used directly by the daemon server.
-
-Events are added to the database as they're enqueued, updated after a response is received from PagerDuty, and used during startup to check for any unsent events. It also powers various operational commands (like `status` and `retry`).
-
-Most of the actual queuing is handled by the `eventqueue` package that `persistentqueue` lleverages.
-
-### `eventqueue`
-
-The event queue responsible for ensuring ordering and handling backpressure, used by `persistentqueue`.
-
-The event queue maintains a worker and buffered channel for every routing key that it's aware of, effectively the individual queues for each integration. It's designed to be used asynchronously with responses communicated over response channels.
-
-Events are represented as "jobs" and processed by "processors," currently an event processor backed by `eventsapi`.
-
-### `eventsapi`
-
-A small helper library used for sending events to both Events API V1 and V2 endpoints. Currently this package is leveraged by `eventqueue` when processing events.
+Looking to contribute? See [development](/docs/development.md) for some helpful tips.
 
 ## Current Status
 
