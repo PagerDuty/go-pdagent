@@ -15,7 +15,7 @@ If you're looking for a more comprehensive PagerDuty API Go client library and C
 
 ## Installation
 
-Binaries for our officially supported platforms can be found on the [releases page][].
+Binaries for our officially supported platforms can be found on the [releases page](https://github.com/PagerDuty/go-pdagent/releases).
 
 ## Usage
 
