@@ -90,7 +90,7 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV1, error) {
 }
 
 func getEventAction(cmdInput sensuCommandInput) (string, error) {
-	if action, isActionString := cmdutil.ValidateMapFieldIsString(cmdInput.checkResult, "action"); isActionString {
+	if action, isActionPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "action"); isActionPresent {
 		if pagerDutyEventAction, isActionPresent := sensuToPagerDutyEventType[action]; isActionPresent {
 			return pagerDutyEventAction, nil
 		}
@@ -106,20 +106,14 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 		return cmdInput.incidentKey, nil
 	}
 
-	var clientName, checkName string
-	var isClientNameString, isCheckNameString bool
-	if client, isClientMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "client"); isClientMap {
-		clientName, isClientNameString = cmdutil.ValidateMapFieldIsString(client, "name")
-	}
-	if check, isCheckMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "check"); isCheckMap {
-		checkName, isCheckNameString = cmdutil.ValidateMapFieldIsString(check, "name")
-	}
+	clientName, okClient := cmdutil.GetNestedStringField(cmdInput.checkResult, "client", "name")
+	checkName, okCheck := cmdutil.GetNestedStringField(cmdInput.checkResult, "check", "name")
 
-	if isClientNameString && isCheckNameString {
+	if okClient && okCheck {
 		return fmt.Sprintf("%v/%v", clientName, checkName), nil
 	}
 
-	if id, isIdString := cmdutil.ValidateMapFieldIsString(cmdInput.checkResult, "id"); isIdString {
+	if id, ok := cmdutil.GetNestedStringField(cmdInput.checkResult, "id"); ok {
 		return id, nil
 	}
 
@@ -127,10 +121,8 @@ func buildDedupKey(cmdInput sensuCommandInput) (string, error) {
 }
 
 func buildSummary(dedupKey string, cmdInput sensuCommandInput) (string, error) {
-	if check, isCheckMap := cmdutil.ValidateMapFieldIsMap(cmdInput.checkResult, "check"); isCheckMap {
-		if output, isOutputString := cmdutil.ValidateMapFieldIsString(check, "output"); isOutputString {
-			return fmt.Sprintf("%v : %v", dedupKey, output), nil
-		}
+	if output, ok := cmdutil.GetNestedStringField(cmdInput.checkResult, "check", "output"); ok {
+		return fmt.Sprintf("%v : %v", dedupKey, output), nil
 	}
 
 	return "", errCouldNotBuildSummary
