@@ -90,7 +90,7 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV1, error) {
 }
 
 func getEventAction(cmdInput sensuCommandInput) (string, error) {
-	if action, isActionPresent := cmdutil.GetNestedStringField(cmdInput.checkResult, "action"); isActionPresent {
+	if action, ok := cmdutil.GetNestedStringField(cmdInput.checkResult, "action"); ok {
 		if pagerDutyEventAction, isActionPresent := sensuToPagerDutyEventType[action]; isActionPresent {
 			return pagerDutyEventAction, nil
 		}
