@@ -90,4 +90,4 @@ This project aims to eventually replace the existing `pdagent` project, but with
 - [ ] `pdagent-integrations` support.
     - [x] `pd-nagios`
     - [x] `pd-sensu`
-    - [ ] `pd-zabbix`
+    - [x] `pd-zabbix`
