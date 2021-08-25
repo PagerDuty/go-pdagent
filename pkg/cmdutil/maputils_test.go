@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type output struct {
-	ok    bool
-	value string
-}
-
 func TestGetNestedStringField(t *testing.T) {
+	type output struct {
+		ok    bool
+		value string
+	}
+
 	tests := []struct {
 		name      string
 		inputMap  map[string]interface{}
