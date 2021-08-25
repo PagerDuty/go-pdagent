@@ -35,13 +35,6 @@ func (e *EventV2) Version() EventVersion {
 	return EventVersion2
 }
 
-func (e *EventV2) AddCustomDetail(k string, v interface{}) {
-	if e.Payload.CustomDetails == nil {
-		e.Payload.CustomDetails = map[string]interface{}{}
-	}
-	e.Payload.CustomDetails[k] = v
-}
-
 // PayloadV2 corresponds to a V2 payload object.
 type PayloadV2 struct {
 	Summary       string                 `json:"summary"`

@@ -13,29 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmdutil
+package sensu
 
 import (
-	"fmt"
-	"io/ioutil"
-
-	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
+	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/spf13/cobra"
 )
 
-func RunSendCommand(config *Config, sendEvent eventsapi.Event) error {
-	c, _ := config.Client()
-
-	resp, err := c.Send(sendEvent)
-	if err != nil {
-		return err
+func NewSensuCmd(config *cmdutil.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sensu",
+		Short: "Access the Sensu integration command(s).",
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	cmd.AddCommand(NewSensuEnqueueCmd(config))
 
-	fmt.Println(string(respBody))
-	return nil
+	return cmd
 }
