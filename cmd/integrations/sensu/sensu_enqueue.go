@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +19,8 @@ type sensuCommandInput struct {
 	incidentKey    string
 	checkResult    map[string]interface{}
 }
+
+var clock common.Clock = common.RealClock{}
 
 var errCouldNotReadStdin = errors.New(`could not read stdin for sensu enqueue command`)
 var errCheckResultNotValidJson = errors.New("could not unmarshal check result, perhaps stdin did not contain valid JSON")
@@ -84,6 +88,12 @@ func buildSendEvent(cmdInput sensuCommandInput) (eventsapi.EventV1, error) {
 		IncidentKey: dedupKey,
 		Description: summary,
 		Details:     cmdInput.checkResult,
+		Client:      "Sensu",
+		Agent: eventsapi.AgentContext{
+			QueuedBy: "pd-sensu",
+			QueuedAt: clock.Now().UTC().Format(time.RFC3339),
+			AgentId:  common.UserAgent(),
+		},
 	}
 
 	return sendEvent, nil

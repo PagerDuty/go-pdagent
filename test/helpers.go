@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
@@ -72,3 +73,7 @@ func BuildV2EventContainer(key string) eventsapi.EventContainer {
 		EventData:    jsonEvent,
 	}
 }
+
+type TestClock struct{}
+
+func (TestClock) Now() time.Time { return time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC) }

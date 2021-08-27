@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -134,6 +135,11 @@ func TestZabbixEnqueue_validInputs(t *testing.T) {
 					"status":   "{TRIGGER.STATUS}",
 					"hostname": "{HOST.NAME}",
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-zabbix",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
 			},
 		},
 		{
@@ -156,6 +162,11 @@ func TestZabbixEnqueue_validInputs(t *testing.T) {
 					"incident_key": "provided_incident_key",
 					"status":       "{TRIGGER.STATUS}",
 					"hostname":     "{HOST.NAME}",
+				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-zabbix",
+					"queued_at": "2021-01-01T00:00:00Z",
 				},
 			},
 		},
@@ -181,6 +192,11 @@ func TestZabbixEnqueue_validInputs(t *testing.T) {
 					"status":   "{TRIGGER.STATUS}",
 					"hostname": "{HOST.NAME}",
 					"NOTE":     "Escalation cancelled (converted from trigger to resolve by pdagent integration)",
+				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-zabbix",
+					"queued_at": "2021-01-01T00:00:00Z",
 				},
 			},
 		},
@@ -209,6 +225,11 @@ func TestZabbixEnqueue_validInputs(t *testing.T) {
 					"hostname": "{HOST.NAME}",
 					"url":      "some.url",
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-zabbix",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
 			},
 		},
 		{
@@ -235,12 +256,18 @@ func TestZabbixEnqueue_validInputs(t *testing.T) {
 					"hostname":          "{HOST.NAME}",
 					"someErrantKeyHere": "someErrantKeyHere",
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-zabbix",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			clock = test.TestClock{}
 			test.InitConfigForIntegrationsTesting()
 
 			defer gock.Off()

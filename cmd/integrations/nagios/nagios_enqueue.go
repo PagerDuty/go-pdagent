@@ -18,8 +18,10 @@ package nagios
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +33,8 @@ type nagiosEnqueueInput struct {
 	incidentKey      string
 	customFields     map[string]string
 }
+
+var clock common.Clock = common.RealClock{}
 
 var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
 var allowedSourceTypes = []string{"host", "service"}
@@ -99,6 +103,11 @@ func buildSendEvent(cmdInputs nagiosEnqueueInput) eventsapi.EventV1 {
 		IncidentKey: cmdInputs.incidentKey,
 		Description: buildEventDescription(cmdInputs),
 		Details:     cmdutil.StringMapToInterfaceMap(cmdInputs.customFields),
+		Agent: eventsapi.AgentContext{
+			QueuedBy: "pd-nagios",
+			QueuedAt: clock.Now().UTC().Format(time.RFC3339),
+			AgentId:  common.UserAgent(),
+		},
 	}
 	if sendEvent.IncidentKey == "" {
 		sendEvent.IncidentKey = buildIncidentKey(cmdInputs)
