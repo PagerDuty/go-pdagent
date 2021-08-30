@@ -6,6 +6,11 @@ type Clock interface {
 	Now() time.Time
 }
 
-type RealClock struct{}
+type realClock struct{}
 
-func (RealClock) Now() time.Time { return time.Now() }
+func NewClock() Clock {
+	c := &realClock{}
+	return c
+}
+
+func (realClock) Now() time.Time { return time.Now() }

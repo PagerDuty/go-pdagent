@@ -18,7 +18,7 @@ type zabbixCommandInput struct {
 	details        map[string]string
 }
 
-var clock common.Clock = common.RealClock{}
+var clock common.Clock = common.NewClock()
 
 var errCouldNotBuildDedupKey = errors.New(`could not build dedupKey, ensure event contains "incident_key", or "id" and "hostname"`)
 var errCouldNotBuildSummary = errors.New(`could not build summary, ensure event contains "name", "status", and "hostname"`)

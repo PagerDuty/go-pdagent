@@ -34,7 +34,7 @@ type nagiosEnqueueInput struct {
 	customFields     map[string]string
 }
 
-var clock common.Clock = common.RealClock{}
+var clock common.Clock = common.NewClock()
 
 var allowedNotificationTypes = []string{"PROBLEM", "ACKNOWLEDGEMENT", "RECOVERY"}
 var allowedSourceTypes = []string{"host", "service"}

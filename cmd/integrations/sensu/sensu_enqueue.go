@@ -20,7 +20,7 @@ type sensuCommandInput struct {
 	checkResult    map[string]interface{}
 }
 
-var clock common.Clock = common.RealClock{}
+var clock common.Clock = common.NewClock()
 
 var errCouldNotReadStdin = errors.New(`could not read stdin for sensu enqueue command`)
 var errCheckResultNotValidJson = errors.New("could not unmarshal check result, perhaps stdin did not contain valid JSON")
