@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -229,6 +230,12 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 					},
 					"client": map[string]interface{}{"name": "clientname"},
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-sensu",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
+				"client": "Sensu",
 			},
 		},
 		{
@@ -251,6 +258,12 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 					"check":  map[string]interface{}{"output": "output"},
 					"id":     "some_id",
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-sensu",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
+				"client": "Sensu",
 			},
 		},
 		{
@@ -272,6 +285,12 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 					"action": "action",
 					"check":  map[string]interface{}{"output": "output"},
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-sensu",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
+				"client": "Sensu",
 			},
 		},
 		{
@@ -293,6 +312,12 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 					"action": "create",
 					"check":  map[string]interface{}{"output": "output"},
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-sensu",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
+				"client": "Sensu",
 			},
 		},
 		{
@@ -314,11 +339,18 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 					"action": "resolve",
 					"check":  map[string]interface{}{"output": "output"},
 				},
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-sensu",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
+				"client": "Sensu",
 			},
 		},
 	}
 
 	for _, tt := range tests {
+		clock = test.TestClock{}
 		t.Run(tt.name, func(t *testing.T) {
 			test.InitConfigForIntegrationsTesting()
 

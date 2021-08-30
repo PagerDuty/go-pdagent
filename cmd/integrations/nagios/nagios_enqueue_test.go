@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/test"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -198,6 +199,7 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			clock = test.TestClock{}
 			test.InitConfigForIntegrationsTesting()
 
 			defer gock.Off()
@@ -232,6 +234,11 @@ func TestNagiosEnqueue_validInputs(t *testing.T) {
 				"incident_key": incidentKey,
 				"description":  buildEventDescription(tt.cmdInputs),
 				"details":      customDetails,
+				"agent": map[string]interface{}{
+					"agent_id":  common.UserAgent(),
+					"queued_by": "pd-nagios",
+					"queued_at": "2021-01-01T00:00:00Z",
+				},
 			}
 
 			gock.New(cmdutil.GetDefaults().Address).

@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/PagerDuty/go-pdagent/pkg/cmdutil"
+	"github.com/PagerDuty/go-pdagent/pkg/common"
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +17,8 @@ type zabbixCommandInput struct {
 	messageType    string
 	details        map[string]string
 }
+
+var clock common.Clock = common.NewClock()
 
 var errCouldNotBuildDedupKey = errors.New(`could not build dedupKey, ensure event contains "incident_key", or "id" and "hostname"`)
 var errCouldNotBuildSummary = errors.New(`could not build summary, ensure event contains "name", "status", and "hostname"`)
@@ -59,6 +63,11 @@ func buildSendEvent(cmdInput zabbixCommandInput) (eventsapi.EventV1, error) {
 		ClientURL:   clientUrl,
 		Description: summary,
 		Details:     cmdutil.StringMapToInterfaceMap(cmdInput.details),
+		Agent: eventsapi.AgentContext{
+			QueuedBy: "pd-zabbix",
+			QueuedAt: clock.Now().UTC().Format(time.RFC3339),
+			AgentId:  common.UserAgent(),
+		},
 	}
 
 	return sendEvent, nil

@@ -11,14 +11,15 @@ const endpointV1 = "/generic/2010-04-15/create_event.json"
 
 // EventV1 corresponds to a V1 event object.
 type EventV1 struct {
-	ServiceKey  string      `json:"service_key"`
-	EventType   string      `json:"event_type"`
-	IncidentKey string      `json:"incident_key,omitempty"`
-	Description string      `json:"description"`
-	Details     DetailsV1   `json:"details,omitempty"`
-	Client      string      `json:"client,omitempty"`
-	ClientURL   string      `json:"client_url,omitempty"`
-	Contexts    []ContextV1 `json:"contexts,omitempty"`
+	ServiceKey  string       `json:"service_key"`
+	EventType   string       `json:"event_type"`
+	IncidentKey string       `json:"incident_key,omitempty"`
+	Description string       `json:"description"`
+	Details     DetailsV1    `json:"details,omitempty"`
+	Client      string       `json:"client,omitempty"`
+	ClientURL   string       `json:"client_url,omitempty"`
+	Contexts    []ContextV1  `json:"contexts,omitempty"`
+	Agent       AgentContext `json:"agent,omitempty"`
 }
 
 func (e *EventV1) GetRoutingKey() string {
@@ -39,6 +40,13 @@ func (e *EventV1) Version() EventVersion {
 
 // DetailsV1 corresponds to a V1 details object.
 type DetailsV1 map[string]interface{}
+
+// AgentContext is used for pdagent integrations
+type AgentContext struct {
+	QueuedBy string `json:"queued_by"`
+	QueuedAt string `json:"queued_at"`
+	AgentId  string `json:"agent_id"`
+}
 
 // ContextV1 corresponds to a V1 context object.
 //
