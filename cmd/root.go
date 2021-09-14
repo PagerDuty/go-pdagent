@@ -86,6 +86,7 @@ func NewRootCmd(config *cmdutil.Config) *cobra.Command {
 
 	// All top-level commands go here
 	rootCmd.AddCommand(NewEnqueueCmd(config))
+	rootCmd.AddCommand(NewHealthCmd(config))
 	rootCmd.AddCommand(NewInitCmd())
 	rootCmd.AddCommand(NewQueueCmd(config))
 	rootCmd.AddCommand(NewSendCmd(config))
