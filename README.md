@@ -58,36 +58,3 @@ At a high level, the agent has three key components:
 ## Development
 
 Looking to contribute? See [development](/docs/development.md) for some helpful tips.
-
-## Current Status
-
-This project aims to eventually replace the existing `pdagent` project, but with some goals in mind before doing so:
-
-- [x] Events API V1 support.
-- [X] Events API V2 support.
-    - [X] Parity with existing `pd-send` functionality.
-    - [X] Comprehensive Events API V2 payload support (no links / images yet).
-- [ ] HTTP configuration.
-    - [ ] Custom cert files.
-    - [x] Proxy and firewall support.
-    - [ ] Local server security.
-- [X] Event queuing.
-- [X] Persistent queuing.
-- [x] Legacy command wrappers.
-    - [x] `pd-send`
-    - [x] `pd-queue`
-- [ ] Releasing
-    - [x] Init and pre/post install scripts.
-    - [X] Github release support.
-        - [X] Source
-        - [X] Darwin
-        - [X] Linux (deb/rpm)
-        - [X] Checksums.
-        - [X] Signature files.
-    - [ ] `deb` repo support.
-    - [ ] `rpm` repo support.
-        - [ ] Signed packages.
-- [ ] `pdagent-integrations` support.
-    - [x] `pd-nagios`
-    - [x] `pd-sensu`
-    - [x] `pd-zabbix`

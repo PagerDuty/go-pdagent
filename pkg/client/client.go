@@ -73,6 +73,17 @@ func (c *Client) QueueStatus(routingKey string) (*http.Response, error) {
 	return c.Do(req)
 }
 
+func (c *Client) HealthCheck() (*http.Response, error) {
+	url := generateURL(c.ServerAddress, "/health")
+
+	req, err := http.NewRequest("GET", url.String(), nil)
+
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
+
 func generateURL(serverAddress, path string) *url.URL {
 	return &url.URL{
 		Scheme: "http",
