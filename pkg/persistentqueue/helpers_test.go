@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// TODO Consider replacing with `ioutil.TempDir` and/or `ioutil.TempFile`.
+// TODO Consider replacing with `os.CreateTemp`.
 const tmpDir = "../../tmp"
 
 var tmpDbFile = path.Join(tmpDir, "test.db")

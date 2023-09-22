@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -108,7 +108,7 @@ func (hb *heartbeat) doHeartbeatRequest() (*heartbeatResponseBody, error) {
 	}
 
 	defer httpResp.Body.Close()
-	respBody, err := ioutil.ReadAll(httpResp.Body)
+	respBody, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
 	}

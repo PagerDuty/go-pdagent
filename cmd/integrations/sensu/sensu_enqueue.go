@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"time"
 
@@ -39,7 +39,7 @@ func NewSensuEnqueueCmd(config *cmdutil.Config) *cobra.Command {
 		Use:   "enqueue",
 		Short: "Enqueue a Sensu event to PagerDuty.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			stdin, err := ioutil.ReadAll(os.Stdin)
+			stdin, err := io.ReadAll(os.Stdin)
 			if err != nil {
 				return errCouldNotReadStdin
 			}

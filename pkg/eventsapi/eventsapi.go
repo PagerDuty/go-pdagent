@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -123,7 +123,7 @@ func enqueueEvent(context context.Context, client *http.Client, url string, even
 	defer httpResp.Body.Close()
 	response.SetHTTPResponse(httpResp)
 
-	respBody, err := ioutil.ReadAll(httpResp.Body)
+	respBody, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return err
 	}

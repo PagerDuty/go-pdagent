@@ -2,7 +2,6 @@ package common
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"syscall"
@@ -35,7 +34,7 @@ func GetPid(pidfile string) (int, error) {
 		return 0, ErrPidfileDoesntExist
 	}
 
-	data, err := ioutil.ReadFile(pidfile)
+	data, err := os.ReadFile(pidfile)
 	if err != nil {
 		return 0, err
 	}
@@ -54,7 +53,7 @@ func InitPidfile(pidfile string) error {
 	}
 
 	pid := strconv.Itoa(os.Getpid())
-	return ioutil.WriteFile(pidfile, []byte(pid), 0744)
+	return os.WriteFile(pidfile, []byte(pid), 0744)
 }
 
 func RemovePidfile(pidfile string) error {

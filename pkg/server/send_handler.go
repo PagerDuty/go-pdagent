@@ -1,14 +1,14 @@
 package server
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/PagerDuty/go-pdagent/pkg/eventsapi"
 )
 
 func (s *Server) SendHandler(rw http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		errorResp(rw, 400, []string{err.Error()})
 		return

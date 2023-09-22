@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -166,7 +165,7 @@ func TestSensuEnqueue_errors(t *testing.T) {
 
 			json, _ := json.Marshal(tt.inputs.checkResult)
 
-			tmpfile, err := ioutil.TempFile("", "stdin")
+			tmpfile, err := os.CreateTemp("", "stdin")
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -376,7 +375,7 @@ func TestSensuEnqueue_validInputs(t *testing.T) {
 
 			json, _ := json.Marshal(tt.cmdInputs.checkResult)
 
-			tmpfile, err := ioutil.TempFile("", "stdin")
+			tmpfile, err := os.CreateTemp("", "stdin")
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -1,7 +1,6 @@
 package persistentqueue
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -63,7 +62,7 @@ func NewPersistentQueue(options ...Option) *PersistentQueue {
 
 func (q *PersistentQueue) Start() error {
 	if q.tmp {
-		dbFile, err := ioutil.TempFile("", "go-pdagent.*.db")
+		dbFile, err := os.CreateTemp("", "go-pdagent.*.db")
 		if err != nil {
 			return err
 		}
