@@ -58,3 +58,11 @@ At a high level, the agent has three key components:
 ## Development
 
 Looking to contribute? See [development](/docs/development.md) for some helpful tips.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Dependencies
+This project includes third-party software components with different licenses.
+See [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for complete attribution.
