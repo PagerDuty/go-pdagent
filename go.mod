@@ -22,7 +22,7 @@ require (
 	go.etcd.io/bbolt v1.3.4 // indirect
 	go.uber.org/zap v1.14.1
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
-	golang.org/x/sys v0.0.0-20200317113312-5766fd39f98d // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/ini.v1 v1.55.0 // indirect
