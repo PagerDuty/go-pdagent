@@ -13,7 +13,7 @@ only-release-tags: &only-release-tags
 jobs:
   test:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/go:1.21
     steps:
       - checkout
       - git/rebase_on_main
@@ -21,7 +21,7 @@ jobs:
       - run: make
   release-test:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/go:1.21
     steps:
       - checkout
       - git/rebase_on_main
@@ -37,7 +37,7 @@ jobs:
           command: curl -sL https://git.io/goreleaser | bash -s -- --snapshot
   release:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/go:1.21
     steps:
       - checkout
       - git/rebase_on_main
